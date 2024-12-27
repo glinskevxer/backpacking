@@ -1,0 +1,115 @@
+"""Shared fixtures.
+
+The corridor built here is fictional but shaped like a real datasheet: a
+78 mile point to point with two resupply road crossings, a long dry stretch in
+the middle, three named passes and a mix of designated and dispersed camping.
+Every test that needs a corridor uses this one so that a change in the shape
+shows up everywhere at once.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from backpacking.trail.corridor import Corridor
+from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
+from backpacking.units import Distance
+
+
+def wp(
+    waypoint_id: str,
+    name: str,
+    mile: float,
+    elevation_ft: float,
+    kind: WaypointKind = WaypointKind.LANDMARK,
+    *,
+    tags: set[str] | None = None,
+) -> Waypoint:
+    """Terse waypoint builder for tests."""
+    return Waypoint(
+        id=waypoint_id,
+        name=name,
+        mile=mile,
+        elevation=Distance.feet(elevation_ft),
+        kind=kind,
+        tags=frozenset(tags or set()),
+    )
+
+
+SPEC: list[tuple[str, str, float, float, WaypointKind, set[str]]] = [
+    ("echo-trailhead", "Echo Lake Trailhead", 0.0, 7420, WaypointKind.TRAILHEAD, set()),
+    ("tamarack-creek", "Tamarack Creek", 2.4, 7680, WaypointKind.WATER, {"reliable"}),
+    ("haypress-camp", "Haypress Camp", 5.1, 8010, WaypointKind.CAMPSITE, {"designated"}),
+    ("lake-aloha-inlet", "Lake Aloha Inlet", 8.7, 8180, WaypointKind.WATER, {"reliable"}),
+    ("mosquito-pass", "Mosquito Pass", 11.9, 8620, WaypointKind.PASS, set()),
+    ("clyde-basin", "Clyde Basin", 15.3, 8040, WaypointKind.CAMPSITE, {"designated"}),
+    ("rubicon-spring", "Rubicon Spring", 18.0, 7710, WaypointKind.WATER, {"seasonal"}),
+    ("barker-road", "Barker Pass Road", 23.6, 7650, WaypointKind.ROAD, {"hitch"}),
+    ("twin-peaks-junction", "Twin Peaks Junction", 27.2, 8100, WaypointKind.JUNCTION, set()),
+    ("dry-bench", "Dry Bench", 31.8, 8340, WaypointKind.CAMPSITE, {"dispersed"}),
+    ("granite-chief", "Granite Chief", 36.5, 9010, WaypointKind.SUMMIT, set()),
+    ("five-lakes-creek", "Five Lakes Creek", 40.1, 7480, WaypointKind.WATER, {"reliable"}),
+    ("whiskey-flat", "Whiskey Flat", 44.7, 7220, WaypointKind.CAMPSITE, {"designated"}),
+    ("mule-ear-pass", "Mule Ear Pass", 49.3, 8480, WaypointKind.PASS, set()),
+    ("squaw-ford", "Squaw Creek Ford", 52.0, 7300, WaypointKind.FORD, {"seasonal"}),
+    ("soda-springs", "Soda Springs Road", 57.4, 6870, WaypointKind.RESUPPLY, {"hitch", "post"}),
+    ("castle-saddle", "Castle Saddle", 62.9, 7960, WaypointKind.CAMPSITE, {"dispersed"}),
+    ("basin-outlet", "Basin Outlet", 66.4, 7540, WaypointKind.WATER, {"reliable"}),
+    ("paradise-shelter", "Paradise Shelter", 70.8, 7180, WaypointKind.SHELTER, {"designated"}),
+    ("donner-pass", "Donner Pass Trailhead", 78.0, 7090, WaypointKind.TRAILHEAD, set()),
+]
+
+
+def build_corridor() -> Corridor:
+    """The reference corridor, with measured rather than derived gain and loss."""
+    waypoints = [wp(i, n, m, e, k, tags=t) for i, n, m, e, k, t in SPEC]
+    rough: dict[str, tuple[float, float, Surface]] = {
+        "echo-trailhead": (340, 80, Surface.TREAD),
+        "tamarack-creek": (410, 80, Surface.TREAD),
+        "haypress-camp": (300, 130, Surface.TREAD),
+        "lake-aloha-inlet": (620, 180, Surface.TALUS),
+        "mosquito-pass": (240, 820, Surface.TALUS),
+        "clyde-basin": (180, 510, Surface.TREAD),
+        "rubicon-spring": (700, 760, Surface.TREAD),
+        "barker-road": (620, 170, Surface.TREAD),
+        "twin-peaks-junction": (520, 280, Surface.TREAD),
+        "dry-bench": (940, 270, Surface.TREAD),
+        "granite-chief": (210, 1740, Surface.SCREE),
+        "five-lakes-creek": (390, 650, Surface.TREAD),
+        "whiskey-flat": (1420, 160, Surface.TREAD),
+        "mule-ear-pass": (150, 1330, Surface.TALUS),
+        "squaw-ford": (300, 730, Surface.TREAD),
+        "soda-springs": (1290, 200, Surface.TREAD),
+        "castle-saddle": (120, 540, Surface.TREAD),
+        "basin-outlet": (260, 620, Surface.TREAD),
+        "paradise-shelter": (480, 570, Surface.TREAD),
+    }
+    segments = []
+    for start, end in zip(waypoints, waypoints[1:], strict=False):
+        gain_ft, loss_ft, surface = rough[start.id]
+        segments.append(
+            Segment(
+                start=start,
+                end=end,
+                gain=Distance.feet(gain_ft),
+                loss=Distance.feet(loss_ft),
+                surface=surface,
+            )
+        )
+    return Corridor(name="Crystal Range Traverse", waypoints=tuple(waypoints), segments=tuple(segments))
+
+
+@pytest.fixture
+def corridor() -> Corridor:
+    return build_corridor()
+
+
+@pytest.fixture
+def short_corridor() -> Corridor:
+    """A three waypoint corridor for tests that do not need the full shape."""
+    waypoints = [
+        wp("start", "Start", 0.0, 5000, WaypointKind.TRAILHEAD),
+        wp("middle", "Middle", 4.0, 6200, WaypointKind.CAMPSITE),
+        wp("finish", "Finish", 9.0, 5400, WaypointKind.TRAILHEAD),
+    ]
+    return Corridor.from_waypoints("Short", waypoints)
