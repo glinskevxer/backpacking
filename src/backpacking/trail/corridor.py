@@ -7,11 +7,11 @@ to the solver, the permit checker and the resupply planner at once.
 
 from __future__ import annotations
 
-import bisect
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 
 from backpacking.errors import CorridorError, WaypointNotFound
+from backpacking.trail.index import MileIndex
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
 from backpacking.units import Distance
 
@@ -23,7 +23,7 @@ class Corridor:
     name: str
     waypoints: tuple[Waypoint, ...]
     segments: tuple[Segment, ...]
-    _mile_index: tuple[float, ...] = field(default=(), repr=False, compare=False)
+    _index: MileIndex | None = field(default=None, repr=False, compare=False)
     _by_id: dict[str, Waypoint] = field(default_factory=dict, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -55,8 +55,14 @@ class Corridor:
                     previous_mile=previous,
                 )
             previous = waypoint.mile
-        object.__setattr__(self, "_mile_index", tuple(w.mile for w in self.waypoints))
+        object.__setattr__(self, "_index", MileIndex([w.mile for w in self.waypoints]))
         object.__setattr__(self, "_by_id", {w.id: w for w in self.waypoints})
+
+    @property
+    def index(self) -> MileIndex:
+        """The mile index behind every lookup on this corridor."""
+        assert self._index is not None  # set in __post_init__
+        return self._index
 
     # -- construction ----------------------------------------------------
 
@@ -138,7 +144,7 @@ class Corridor:
     # -- mile addressed lookups -----------------------------------------
 
     def _check_mile(self, mile: float) -> None:
-        if not self.start_mile <= mile <= self.end_mile:
+        if not self.index.contains(mile):
             raise CorridorError(
                 "mile falls outside the corridor",
                 corridor=self.name,
@@ -150,24 +156,17 @@ class Corridor:
     def segment_at(self, mile: float) -> Segment:
         """The segment containing ``mile``. The boundary belongs to the later one."""
         self._check_mile(mile)
-        position = bisect.bisect_right(self._mile_index, mile) - 1
-        position = min(max(position, 0), len(self.segments) - 1)
-        return self.segments[position]
+        return self.segments[self.index.interval_for(mile)]
 
     def nearest_waypoint(self, mile: float) -> Waypoint:
         self._check_mile(mile)
-        position = bisect.bisect_left(self._mile_index, mile)
-        if position == 0:
-            return self.waypoints[0]
-        if position == len(self.waypoints):
-            return self.waypoints[-1]
-        before = self.waypoints[position - 1]
-        after = self.waypoints[position]
-        return before if (mile - before.mile) <= (after.mile - mile) else after
+        return self.waypoints[self.index.nearest(mile)]
 
     def next_waypoint(self, mile: float, *, kind: WaypointKind | None = None) -> Waypoint | None:
         """First waypoint strictly ahead of ``mile``, optionally filtered by kind."""
-        position = bisect.bisect_right(self._mile_index, mile)
+        position = self.index.first_after(mile)
+        if position is None:
+            return None
         for waypoint in self.waypoints[position:]:
             if kind is None or waypoint.kind is kind:
                 return waypoint
@@ -178,20 +177,18 @@ class Corridor:
             raise CorridorError(
                 "end mile precedes start mile", start_mile=start_mile, end_mile=end_mile
             )
-        left = bisect.bisect_left(self._mile_index, start_mile)
-        right = bisect.bisect_right(self._mile_index, end_mile)
+        left, right = self.index.span(start_mile, end_mile)
         return self.waypoints[left:right]
 
     def elevation_at(self, mile: float) -> Distance:
         """Elevation interpolated linearly between the bracketing waypoints."""
         self._check_mile(mile)
-        position = bisect.bisect_left(self._mile_index, mile)
-        if position < len(self.waypoints) and self._mile_index[position] == mile:
-            return self.waypoints[position].elevation
-        before = self.waypoints[position - 1]
-        after = self.waypoints[position]
-        span = after.mile - before.mile
-        fraction = 0.0 if span == 0.0 else (mile - before.mile) / span
+        bracket = self.index.bracket(mile)
+        if bracket.exact:
+            return self.waypoints[bracket.before].elevation
+        before = self.waypoints[bracket.before]
+        after = self.waypoints[bracket.after]
+        _, fraction = self.index.fraction_within(mile)
         rise = after.elevation.in_feet - before.elevation.in_feet
         return Distance.feet(before.elevation.in_feet + rise * fraction)
 
