@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import pytest
 
+from backpacking.pace.estimator import PaceEstimator
+from backpacking.pace.models import HikerProfile
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
-from backpacking.units import Distance
+from backpacking.units import Distance, Mass
 
 
 def wp(
@@ -113,3 +115,21 @@ def short_corridor() -> Corridor:
         wp("finish", "Finish", 9.0, 5400, WaypointKind.TRAILHEAD),
     ]
     return Corridor.from_waypoints("Short", waypoints)
+
+
+@pytest.fixture
+def hiker() -> HikerProfile:
+    """A competent but not fast hiker, calibrated at 2.7 mph on the flat."""
+    return HikerProfile(
+        name="reference",
+        flat_pace_mph=2.7,
+        max_moving_hours=9.0,
+        max_daily_gain_ft=6000.0,
+        break_fraction=0.18,
+        reference_load=Mass.pounds(26.0),
+    )
+
+
+@pytest.fixture
+def estimator(hiker: HikerProfile) -> PaceEstimator:
+    return PaceEstimator(profile=hiker)
