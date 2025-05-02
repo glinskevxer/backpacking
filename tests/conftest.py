@@ -16,6 +16,7 @@ from backpacking.pace.models import HikerProfile
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
 from backpacking.units import Distance, Mass
+from backpacking.water.sources import Reliability, WaterSource, WaterTable
 
 
 def wp(
@@ -133,3 +134,43 @@ def hiker() -> HikerProfile:
 @pytest.fixture
 def estimator(hiker: HikerProfile) -> PaceEstimator:
     return PaceEstimator(profile=hiker)
+
+
+WATER_SPEC: list[tuple[str, str, float, Reliability, float]] = [
+    ("tamarack-creek", "Tamarack Creek", 2.4, Reliability.PERENNIAL, 0.0),
+    ("lake-aloha-inlet", "Lake Aloha Inlet", 8.7, Reliability.PERENNIAL, 0.0),
+    ("clyde-spring", "Clyde Basin Spring", 15.4, Reliability.SEASONAL, 0.1),
+    ("rubicon-spring", "Rubicon Spring", 18.0, Reliability.SEASONAL, 0.2),
+    ("barker-tank", "Barker Cattle Tank", 23.8, Reliability.UNRELIABLE, 0.3),
+    ("five-lakes-creek", "Five Lakes Creek", 40.1, Reliability.PERENNIAL, 0.0),
+    ("whiskey-seep", "Whiskey Flat Seep", 44.9, Reliability.SEASONAL, 0.05),
+    ("squaw-ford", "Squaw Creek Ford", 52.0, Reliability.PERENNIAL, 0.0),
+    ("soda-tap", "Soda Springs Spigot", 57.4, Reliability.PERENNIAL, 0.0),
+    ("basin-outlet", "Basin Outlet", 66.4, Reliability.PERENNIAL, 0.0),
+    ("paradise-creek", "Paradise Creek", 70.9, Reliability.SEASONAL, 0.15),
+]
+
+
+def build_water_table() -> WaterTable:
+    """Water for the reference corridor, with a real dry stretch mid trail.
+
+    The 23.8 to 40.1 gap is the interesting one: 16.3 miles with nothing usable
+    in it once the cattle tank drops below threshold, which it does from July.
+    """
+    return WaterTable(
+        [
+            WaterSource(
+                id=source_id,
+                name=name,
+                mile=mile,
+                reliability=reliability,
+                off_trail=Distance.miles(off_trail),
+            )
+            for source_id, name, mile, reliability, off_trail in WATER_SPEC
+        ]
+    )
+
+
+@pytest.fixture
+def water() -> WaterTable:
+    return build_water_table()
