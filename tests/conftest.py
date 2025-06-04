@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import pytest
 
+from backpacking.gear.inventory import Inventory, ItemCategory, PackItem
 from backpacking.pace.estimator import PaceEstimator
 from backpacking.pace.models import HikerProfile
 from backpacking.trail.corridor import Corridor
@@ -174,3 +175,48 @@ def build_water_table() -> WaterTable:
 @pytest.fixture
 def water() -> WaterTable:
     return build_water_table()
+
+
+GEAR_SPEC: list[tuple[str, str, float, ItemCategory, bool, bool]] = [
+    ("pack", "Sixty litre pack", 31.0, ItemCategory.PACK, False, False),
+    ("quilt", "Twenty degree quilt", 21.5, ItemCategory.SLEEP, False, False),
+    ("pad", "Inflatable pad", 13.0, ItemCategory.SLEEP, False, False),
+    ("shelter", "Two person tarp tent", 26.0, ItemCategory.SHELTER, False, False),
+    ("stakes", "Titanium stakes", 2.4, ItemCategory.SHELTER, False, False),
+    ("stove", "Canister stove", 2.6, ItemCategory.COOK, False, False),
+    ("pot", "Titanium pot", 4.2, ItemCategory.COOK, False, False),
+    ("filter", "Squeeze filter", 3.0, ItemCategory.WATER, False, False),
+    ("bottles", "Two litre bottles", 2.2, ItemCategory.WATER, False, False),
+    ("puffy", "Down jacket", 11.0, ItemCategory.CLOTHING, False, False),
+    ("rain-shell", "Rain shell", 7.5, ItemCategory.CLOTHING, False, False),
+    ("headlamp", "Headlamp", 3.1, ItemCategory.ELECTRONICS, False, False),
+    ("battery", "Ten thousand mAh battery", 6.8, ItemCategory.ELECTRONICS, False, False),
+    ("first-aid", "First aid and repair", 5.4, ItemCategory.SAFETY, False, False),
+    ("beacon", "Satellite messenger", 3.5, ItemCategory.SAFETY, False, False),
+    ("maps", "Printed maps", 2.0, ItemCategory.NAVIGATION, False, False),
+    ("shirt", "Sun shirt", 6.0, ItemCategory.CLOTHING, True, False),
+    ("shorts", "Hiking shorts", 4.5, ItemCategory.CLOTHING, True, False),
+    ("shoes", "Trail runners", 21.0, ItemCategory.CLOTHING, True, False),
+]
+
+
+def build_inventory() -> Inventory:
+    """A conventional lightweight three season list, worn items included."""
+    return Inventory(
+        [
+            PackItem(
+                id=item_id,
+                name=name,
+                mass=Mass.ounces(ounces),
+                category=category,
+                worn=worn,
+                consumable=consumable,
+            )
+            for item_id, name, ounces, category, worn, consumable in GEAR_SPEC
+        ]
+    )
+
+
+@pytest.fixture
+def inventory() -> Inventory:
+    return build_inventory()
