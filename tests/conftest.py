@@ -9,10 +9,14 @@ shows up everywhere at once.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from backpacking.gear.inventory import Inventory, ItemCategory, PackItem
 from backpacking.pace.estimator import PaceEstimator
+from backpacking.permits.quota import EntryPoint, QuotaCalendar, QuotaWindow
+from backpacking.permits.zones import CampingPolicy, PermitZone, ZoneMap
 from backpacking.pace.models import HikerProfile
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
@@ -220,3 +224,93 @@ def build_inventory() -> Inventory:
 @pytest.fixture
 def inventory() -> Inventory:
     return build_inventory()
+
+
+def build_zone_map() -> ZoneMap:
+    """Four zones across the reference corridor, under three agencies.
+
+    The wilderness zone in the middle is the strict one: designated sites only,
+    a three night cap, canisters required and no fires above 8,000 feet. It is
+    where every interesting permit conflict happens.
+    """
+    return ZoneMap(
+        [
+            PermitZone(
+                id="echo-front",
+                name="Echo Front Country",
+                agency="Eldorado National Forest",
+                start_mile=0.0,
+                end_mile=8.7,
+                camping=CampingPolicy.DISPERSED,
+                min_distance_from_water=Distance.feet(100),
+                campfires_allowed=True,
+            ),
+            PermitZone(
+                id="crystal-wilderness",
+                name="Crystal Range Wilderness",
+                agency="Eldorado National Forest",
+                start_mile=8.7,
+                end_mile=36.5,
+                camping=CampingPolicy.DESIGNATED_ONLY,
+                max_consecutive_nights=3,
+                min_distance_from_water=Distance.feet(200),
+                campfires_allowed=True,
+                campfire_elevation_limit=Distance.feet(8000),
+                canister_required=True,
+                designated_sites=frozenset({"clyde-basin", "dry-bench", "haypress-camp"}),
+            ),
+            PermitZone(
+                id="granite-state-park",
+                name="Granite Chief State Park",
+                agency="California State Parks",
+                start_mile=36.5,
+                end_mile=57.4,
+                camping=CampingPolicy.DISPERSED,
+                max_consecutive_nights=5,
+                campfires_allowed=False,
+            ),
+            PermitZone(
+                id="donner-north",
+                name="Donner North",
+                agency="Tahoe National Forest",
+                start_mile=57.4,
+                end_mile=78.0,
+                camping=CampingPolicy.DISPERSED,
+                campfires_allowed=True,
+            ),
+        ]
+    )
+
+
+def build_quota_calendar() -> QuotaCalendar:
+    """Two entry points, one quotaed through the summer and one open."""
+    return QuotaCalendar(
+        [
+            EntryPoint(
+                id="echo-trailhead",
+                name="Echo Lake Trailhead",
+                mile=0.0,
+                zone_id="echo-front",
+                windows=(
+                    QuotaWindow(date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4),
+                ),
+                closures=frozenset({date(2025, 7, 4)}),
+            ),
+            EntryPoint(
+                id="barker-road",
+                name="Barker Pass Road",
+                mile=23.6,
+                zone_id="crystal-wilderness",
+            ),
+        ]
+    )
+
+
+@pytest.fixture
+def zone_map() -> ZoneMap:
+    return build_zone_map()
+
+
+@pytest.fixture
+def quota() -> QuotaCalendar:
+    return build_quota_calendar()
