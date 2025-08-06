@@ -15,12 +15,13 @@ import pytest
 
 from backpacking.gear.inventory import Inventory, ItemCategory, PackItem
 from backpacking.pace.estimator import PaceEstimator
+from backpacking.resupply.towns import ResupplyPoint, ServiceLevel, TownIndex
 from backpacking.permits.quota import EntryPoint, QuotaCalendar, QuotaWindow
 from backpacking.permits.zones import CampingPolicy, PermitZone, ZoneMap
 from backpacking.pace.models import HikerProfile
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
-from backpacking.units import Distance, Mass
+from backpacking.units import Distance, Duration, Mass
 from backpacking.water.sources import Reliability, WaterSource, WaterTable
 
 
@@ -314,3 +315,62 @@ def zone_map() -> ZoneMap:
 @pytest.fixture
 def quota() -> QuotaCalendar:
     return build_quota_calendar()
+
+
+def build_town_index() -> TownIndex:
+    """Three usable stops and two that only sell crisps and fuel canisters."""
+    return TownIndex(
+        [
+            ResupplyPoint(
+                id="echo-chalet",
+                name="Echo Chalet",
+                mile=0.3,
+                groceries=ServiceLevel.CONVENIENCE,
+                walk_in=Distance.miles(0.2),
+                has_post_office=False,
+                open_days=frozenset({4, 5, 6}),
+            ),
+            ResupplyPoint(
+                id="tahoma",
+                name="Tahoma",
+                mile=23.6,
+                groceries=ServiceLevel.SMALL_GROCERY,
+                hitch=Distance.miles(7.0),
+                has_post_office=True,
+                has_lodging=True,
+                has_shower=True,
+                open_days=frozenset(range(6)),
+            ),
+            ResupplyPoint(
+                id="alpine-store",
+                name="Alpine Meadows Store",
+                mile=40.4,
+                groceries=ServiceLevel.GAS_STATION,
+                hitch=Distance.miles(2.5),
+            ),
+            ResupplyPoint(
+                id="soda-springs",
+                name="Soda Springs",
+                mile=57.4,
+                groceries=ServiceLevel.FULL_GROCERY,
+                hitch=Distance.miles(4.0),
+                shuttle_wait=Duration.minutes(20.0),
+                has_post_office=True,
+                has_lodging=True,
+                open_days=frozenset(range(6)),
+            ),
+            ResupplyPoint(
+                id="donner-summit",
+                name="Donner Summit Lodge",
+                mile=77.6,
+                groceries=ServiceLevel.SMALL_GROCERY,
+                hitch=Distance.miles(1.5),
+                has_lodging=True,
+            ),
+        ]
+    )
+
+
+@pytest.fixture
+def towns() -> TownIndex:
+    return build_town_index()
