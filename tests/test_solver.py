@@ -10,7 +10,13 @@ from backpacking.errors import PlanInfeasible
 from backpacking.pace.models import HikerProfile
 from backpacking.plan.constraints import PlanConstraints
 from backpacking.plan.itinerary import Itinerary
-from backpacking.plan.solver import PlanRequest, campable_waypoints, candidate_camps, solve
+from backpacking.plan.solver import (
+    PlanRequest,
+    campable_waypoints,
+    candidate_camps,
+    solve,
+    stop_miles,
+)
 from backpacking.trail.corridor import Corridor
 from backpacking.units import Distance, Mass
 
@@ -152,34 +158,45 @@ class TestSolve:
                 corridor,
                 hiker,
                 constraints=PlanConstraints(max_daily_miles=16.0, min_daily_miles=4.0),
-                window_miles=12.0,
             )
         )
         assert len(tight) > len(loose)
 
-    def test_a_tight_mileage_cap_defeats_the_greedy_window(
+    def test_a_tight_mileage_cap_is_respected(
         self, corridor: Corridor, hiker: HikerProfile
     ) -> None:
-        """Known limitation. The window is centred on the target day, so a cap
-        well inside it leaves nothing admissible even though a legal split
-        exists further back."""
         limits = PlanConstraints(max_daily_miles=12.0, min_daily_miles=4.0)
-        with pytest.raises(PlanInfeasible, match="no admissible camp"):
-            solve(request_for(corridor, hiker, constraints=limits))
+        plan = solve(request_for(corridor, hiker, constraints=limits))
+        assert all(day.miles <= 12.0 for day in plan.days)
 
-    def test_a_tight_gain_cap_also_defeats_it(
+    def test_a_tight_gain_cap_is_respected(
         self, corridor: Corridor, hiker: HikerProfile
     ) -> None:
         limits = PlanConstraints(max_daily_gain=Distance.feet(1600))
-        with pytest.raises(PlanInfeasible, match="no admissible camp"):
-            solve(request_for(corridor, hiker, constraints=limits))
+        plan = solve(request_for(corridor, hiker, constraints=limits))
+        assert all(day.gain.in_feet <= 1600.0 for day in plan.days[:-1])
 
-    def test_widening_the_window_recovers_the_tight_cap(
+    def test_an_impossible_cap_reports_the_route_not_a_window(
         self, corridor: Corridor, hiker: HikerProfile
     ) -> None:
-        limits = PlanConstraints(max_daily_miles=12.0, min_daily_miles=4.0)
-        plan = solve(request_for(corridor, hiker, constraints=limits, window_miles=12.0))
-        assert all(day.miles <= 12.0 for day in plan.days)
+        limits = PlanConstraints(max_daily_miles=1.5, min_daily_miles=0.5)
+        with pytest.raises(PlanInfeasible, match="no admissible sequence of days"):
+            solve(request_for(corridor, hiker, constraints=limits))
+
+    def test_the_stop_graph_lists_every_legal_camp(
+        self, corridor: Corridor, hiker: HikerProfile
+    ) -> None:
+        miles = stop_miles(request_for(corridor, hiker))
+        assert miles[0] == pytest.approx(0.0)
+        assert miles[-1] == pytest.approx(78.0)
+        assert list(miles) == sorted(miles)
+
+    def test_forbidden_camps_are_kept_out_of_the_stop_graph(
+        self, corridor: Corridor, hiker: HikerProfile
+    ) -> None:
+        limits = PlanConstraints(forbidden_camps=frozenset({"clyde-basin"}))
+        miles = stop_miles(request_for(corridor, hiker, constraints=limits))
+        assert 15.3 not in miles
 
     def test_an_impossible_day_cap_is_reported(
         self, corridor: Corridor, hiker: HikerProfile
@@ -196,7 +213,7 @@ class TestSolve:
             solve(request_for(corridor, hiker, constraints=limits))
 
     def test_the_plan_is_labelled(self, plan: Itinerary) -> None:
-        assert plan.label == "greedy"
+        assert plan.label == "shortest-path"
 
     def test_pack_weight_is_carried_onto_every_day(self, plan: Itinerary) -> None:
         assert all(day.pack_weight.in_pounds == pytest.approx(26.0) for day in plan)
