@@ -77,10 +77,11 @@ def session_scope(factory: sessionmaker[Session]) -> Iterator[Session]:
 class Database:
     """Engine, factory and lifecycle in one object, for the API and the CLI."""
 
-    __slots__ = ("engine", "factory")
+    __slots__ = ("engine", "factory", "settings")
 
     def __init__(self, settings: Settings | None = None, *, echo: bool = False) -> None:
-        self.engine = build_engine(settings, echo=echo)
+        self.settings = settings or get_settings()
+        self.engine = build_engine(self.settings, echo=echo)
         self.factory = build_session_factory(self.engine)
 
     def create_all(self) -> None:

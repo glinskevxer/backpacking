@@ -9,11 +9,15 @@ shows up everywhere at once.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
+from fastapi.testclient import TestClient
 
 from backpacking.gear.inventory import Inventory, ItemCategory, PackItem
+from backpacking.api.app import create_app
+from backpacking.config import Settings
 from backpacking.pace.estimator import PaceEstimator
 from backpacking.resupply.towns import ResupplyPoint, ServiceLevel, TownIndex
 from backpacking.permits.quota import EntryPoint, QuotaCalendar, QuotaWindow
@@ -22,6 +26,13 @@ from backpacking.pace.models import HikerProfile
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
 from backpacking.units import Distance, Duration, Mass
+from backpacking.storage.repository import (
+    CorridorRepository,
+    PermitRepository,
+    ResupplyRepository,
+    WaterRepository,
+)
+from backpacking.storage.session import Database
 from backpacking.water.sources import Reliability, WaterSource, WaterTable
 
 
@@ -374,3 +385,26 @@ def build_town_index() -> TownIndex:
 @pytest.fixture
 def towns() -> TownIndex:
     return build_town_index()
+
+
+@pytest.fixture
+def seeded_database(tmp_path, corridor, water, zone_map, towns) -> Iterator[Database]:
+    """A database with the whole reference corridor already in it."""
+    settings = Settings(database_url=f"sqlite+pysqlite:///{tmp_path / 'seeded.sqlite3'}")
+    database = Database(settings)
+    database.create_all()
+    with database.session() as session:
+        corridor_id = CorridorRepository(session).save(corridor, "crystal-range")
+        WaterRepository(session).save(corridor_id, list(water))
+        PermitRepository(session).save(corridor_id, list(zone_map))
+        ResupplyRepository(session).save(corridor_id, list(towns))
+    yield database
+    database.dispose()
+
+
+@pytest.fixture
+def api(seeded_database: Database) -> Iterator[TestClient]:
+    """A test client over the seeded database."""
+    settings = seeded_database.settings
+    with TestClient(create_app(settings, database=seeded_database)) as client:
+        yield client
