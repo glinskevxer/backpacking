@@ -46,7 +46,7 @@ def _profile(
 def build(
     ctx: typer.Context,
     slug: str = typer.Argument(..., help="corridor to plan over"),
-    start: date = typer.Option(..., "--start", help="first day on trail"),
+    start: str = typer.Option(..., "--start", help="first day on trail, YYYY-MM-DD"),
     pace: float = typer.Option(3.0, "--pace", help="flat pace in mph"),
     hours: float = typer.Option(9.0, "--hours", help="moving hours a day"),
     pack: float = typer.Option(26.0, "--pack", help="pack weight in pounds"),
@@ -58,6 +58,10 @@ def build(
     save: bool = typer.Option(False, "--save", help="store the plan"),
 ) -> None:
     """Build an itinerary and print it."""
+    try:
+        start_date = date.fromisoformat(start)
+    except ValueError as exc:
+        raise typer.BadParameter("start must be an ISO date such as 2025-07-20") from exc
     context = _context(ctx)
     with context.session() as session:
         from backpacking.storage.repository import CorridorRepository
@@ -68,7 +72,7 @@ def build(
         request = PlanRequest(
             corridor=corridor,
             profile=profile,
-            start_date=start,
+            start_date=start_date,
             constraints=PlanConstraints(
                 max_daily_miles=max_miles,
                 max_daily_gain=Distance.feet(max_gain),

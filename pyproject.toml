@@ -25,6 +25,8 @@ db = [
 ]
 cli = [
     "typer==0.15.1",
+    # typer 0.15 predates the click 8.2 signature change in make_metavar.
+    "click==8.1.8",
 ]
 dev = [
     "pytest==8.3.4",
@@ -35,6 +37,9 @@ dev = [
     "ruff==0.8.6",
     "mypy==1.14.1",
 ]
+
+[project.scripts]
+backpacking = "backpacking.cli.main:run"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/backpacking"]
