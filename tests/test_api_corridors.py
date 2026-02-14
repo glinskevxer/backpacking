@@ -2,37 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
 
-from backpacking.api.app import create_app
-from backpacking.config import Settings
-from backpacking.storage.repository import (
-    CorridorRepository,
-    PermitRepository,
-    ResupplyRepository,
-    WaterRepository,
-)
-from backpacking.storage.session import Database
-from backpacking.trail.corridor import Corridor
-
 
 @pytest.fixture
-def client(tmp_path, corridor: Corridor, water, zone_map, towns) -> Iterator[TestClient]:
-    settings = Settings(database_url=f"sqlite+pysqlite:///{tmp_path / 'api.sqlite3'}")
-    database = Database(settings)
-    database.create_all()
-    with database.session() as session:
-        corridor_id = CorridorRepository(session).save(corridor, "crystal-range")
-        WaterRepository(session).save(corridor_id, list(water))
-        PermitRepository(session).save(corridor_id, list(zone_map))
-        ResupplyRepository(session).save(corridor_id, list(towns))
-    app = create_app(settings, database=database)
-    with TestClient(app) as test_client:
-        yield test_client
-    database.dispose()
+def client(api: TestClient) -> TestClient:
+    """The seeded client from conftest, under the name this module uses."""
+    return api
 
 
 class TestHealth:

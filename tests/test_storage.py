@@ -32,12 +32,8 @@ START = date(2025, 7, 20)
 
 
 @pytest.fixture
-def database(tmp_path) -> Iterator[Database]:
-    settings = Settings(database_url=f"sqlite+pysqlite:///{tmp_path / 'test.sqlite3'}")
-    db = Database(settings)
-    db.create_all()
-    yield db
-    db.dispose()
+def database(memory_database: Database) -> Database:
+    return memory_database
 
 
 @pytest.fixture

@@ -388,9 +388,18 @@ def towns() -> TownIndex:
 
 
 @pytest.fixture
-def seeded_database(tmp_path, corridor, water, zone_map, towns) -> Iterator[Database]:
+def memory_database() -> Iterator[Database]:
+    """An empty in memory database, which is far quicker than a temp file."""
+    database = Database(Settings(database_url="sqlite+pysqlite:///:memory:"))
+    database.create_all()
+    yield database
+    database.dispose()
+
+
+@pytest.fixture
+def seeded_database(corridor, water, zone_map, towns) -> Iterator[Database]:
     """A database with the whole reference corridor already in it."""
-    settings = Settings(database_url=f"sqlite+pysqlite:///{tmp_path / 'seeded.sqlite3'}")
+    settings = Settings(database_url="sqlite+pysqlite:///:memory:")
     database = Database(settings)
     database.create_all()
     with database.session() as session:

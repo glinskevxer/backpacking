@@ -12,6 +12,7 @@ from contextlib import contextmanager
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from backpacking.config import Settings, get_settings
 from backpacking.errors import ConfigurationError
@@ -25,12 +26,23 @@ def build_engine(settings: Settings | None = None, *, echo: bool = False) -> Eng
     if not url:
         raise ConfigurationError("database_url is empty")
     connect_args: dict[str, object] = {}
+    kwargs: dict[str, object] = {}
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
-    engine = create_engine(url, echo=echo, future=True, connect_args=connect_args)
+        if is_memory_url(url):
+            # An in memory database lives inside its connection. Without a
+            # static pool every session gets a fresh, empty database, which
+            # looks exactly like a silently failing write.
+            kwargs["poolclass"] = StaticPool
+    engine = create_engine(url, echo=echo, future=True, connect_args=connect_args, **kwargs)
     if url.startswith("sqlite"):
         _enable_sqlite_foreign_keys(engine)
     return engine
+
+
+def is_memory_url(url: str) -> bool:
+    """Whether this URL points at an in memory SQLite database."""
+    return url.startswith("sqlite") and (":memory:" in url or "mode=memory" in url)
 
 
 def _enable_sqlite_foreign_keys(engine: Engine) -> None:
