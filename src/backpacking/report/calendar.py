@@ -25,7 +25,7 @@ def escape(value: str) -> str:
     """Escape the four characters iCalendar treats specially."""
     return (
         value.replace("\\", "\\\\")
-        .replace(";", "\;")
+        .replace(";", "\\;")
         .replace(",", "\\,")
         .replace("\n", "\\n")
     )
