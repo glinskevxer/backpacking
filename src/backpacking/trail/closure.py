@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 
-from backpacking.errors import RouteResolutionError
+from backpacking.errors import CorridorError, RouteResolutionError
 from backpacking.trail.alternates import Alternate, bypassed_span
 from backpacking.trail.corridor import Corridor
 from backpacking.units import Distance
@@ -164,7 +164,9 @@ def alternates_covering(
     for alternate in alternates:
         try:
             start, end = bypassed_span(corridor, alternate)
-        except RouteResolutionError:
+        except CorridorError:
+            # Either the alternate names a waypoint this corridor does not have,
+            # or it rejoins before it departs. Both mean it is not a candidate.
             continue
         if start <= closure.start_mile and end >= closure.end_mile:
             covering.append(alternate)
