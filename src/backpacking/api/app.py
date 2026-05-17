@@ -15,7 +15,15 @@ from fastapi import FastAPI
 from backpacking import __version__
 from backpacking.api.errors import install_error_handlers
 from backpacking.api.middleware import install_metrics_endpoint, install_request_middleware
-from backpacking.api.routes import corridors, health, permits, plans, resupply, water
+from backpacking.api.routes import (
+    corridors,
+    health,
+    permits,
+    plans,
+    reports,
+    resupply,
+    water,
+)
 from backpacking.config import Settings, get_settings
 from backpacking.observability.logging import configure_logging
 from backpacking.storage.session import Database
@@ -69,4 +77,5 @@ def create_app(
     app.include_router(permits.router)
     app.include_router(water.router)
     app.include_router(resupply.router)
+    app.include_router(reports.router)
     return app
