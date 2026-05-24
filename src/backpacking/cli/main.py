@@ -13,7 +13,7 @@ from pathlib import Path
 import typer
 
 from backpacking import __version__
-from backpacking.cli.commands import corridor, plan, trail
+from backpacking.cli.commands import corridor, plan, report, trail
 from backpacking.cli.context import build_context
 from backpacking.errors import BackpackingError
 
@@ -26,6 +26,7 @@ app.add_typer(plan.app, name="plan")
 app.add_typer(trail.water_app, name="water")
 app.add_typer(trail.permit_app, name="permit")
 app.add_typer(trail.resupply_app, name="resupply")
+app.add_typer(report.app, name="report")
 
 
 def version_callback(value: bool) -> None:
