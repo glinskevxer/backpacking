@@ -218,6 +218,56 @@ class TestSolve:
     def test_pack_weight_is_carried_onto_every_day(self, plan: Itinerary) -> None:
         assert all(day.pack_weight.in_pounds == pytest.approx(26.0) for day in plan)
 
+    def test_an_unwalkable_leg_is_reported_not_raised_from_the_pace_model(
+        self, hiker: HikerProfile
+    ) -> None:
+        """A cliff makes every edge across it unusable.
+
+        The route is then genuinely impassable, and the answer has to be a plan
+        level failure a caller can act on rather than a pace model exception
+        leaking out of the search.
+        """
+        from backpacking.trail.corridor import Corridor
+        from tests.conftest import wp
+
+        cliff = Corridor.from_waypoints(
+            "Cliff",
+            [
+                wp("bottom", "Bottom", 0.0, 2000),
+                wp("ledge", "Ledge", 0.1, 9000),
+                wp("top", "Top", 8.0, 9200),
+            ],
+        )
+        with pytest.raises(PlanInfeasible, match="no admissible sequence of days"):
+            solve(
+                request_for(
+                    cliff,
+                    hiker,
+                    constraints=PlanConstraints(min_daily_miles=0.5, max_daily_miles=60.0),
+                )
+            )
+
+    def test_a_steep_but_walkable_leg_is_still_planned(self, hiker: HikerProfile) -> None:
+        from backpacking.trail.corridor import Corridor
+        from tests.conftest import wp
+
+        steep = Corridor.from_waypoints(
+            "Steep",
+            [
+                wp("bottom", "Bottom", 0.0, 6000),
+                wp("shoulder", "Shoulder", 2.0, 8000),
+                wp("top", "Top", 8.0, 8600),
+            ],
+        )
+        plan = solve(
+            request_for(
+                steep,
+                hiker,
+                constraints=PlanConstraints(min_daily_miles=0.5, max_daily_miles=60.0),
+            )
+        )
+        assert plan.days[-1].end_mile == pytest.approx(8.0)
+
     def test_the_plan_validates_as_an_itinerary(self, plan: Itinerary) -> None:
         rebuilt = Itinerary(corridor=plan.corridor, days=plan.days, label=plan.label)
         assert rebuilt.total_distance == plan.total_distance

@@ -27,7 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-from backpacking.errors import PlanInfeasible
+from backpacking.errors import PaceModelError, PlanInfeasible
 from backpacking.pace.estimator import PaceEstimator
 from backpacking.pace.fatigue import FatigueState, advance
 from backpacking.pace.models import HikerProfile, LegEstimate
@@ -179,13 +179,18 @@ def _relax(
         return None
     start_mile = nodes[source_index]
     end_mile = nodes[target_index]
-    estimate = estimator.estimate_span(
-        request.corridor,
-        start_mile,
-        end_mile,
-        carried=request.pack_weight,
-        state=source.state,
-    )
+    try:
+        estimate = estimator.estimate_span(
+            request.corridor,
+            start_mile,
+            end_mile,
+            carried=request.pack_weight,
+            state=source.state,
+        )
+    except PaceModelError:
+        # Somewhere in this stretch the ground is steeper than any walking model
+        # describes. That is not a crash, it is an edge the search cannot use.
+        return None
     if not constraints.day_is_admissible(
         end_mile - start_mile, estimate.gain, estimate.elapsed_time, is_final=is_final
     ):
