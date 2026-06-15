@@ -8,9 +8,7 @@ import typer
 
 from backpacking.cli.context import CliContext
 from backpacking.cli.formatting import keyed, table
-from backpacking.pace.models import HikerProfile
-from backpacking.permits.validate import suggest_fixes, validate_nights
-from backpacking.plan.constraints import PlanConstraints
+from backpacking.permits.validate import suggest_fixes
 from backpacking.plan.explain import (
     explain_plan,
     render_costs,
@@ -19,8 +17,7 @@ from backpacking.plan.explain import (
     render_summary,
 )
 from backpacking.plan.scoring import target_hours_for
-from backpacking.plan.solver import PlanRequest, solve
-from backpacking.units import Distance, Duration, Mass
+from backpacking.services.planning import ConstraintSpec, HikerSpec, PlanningService
 
 app = typer.Typer(help="Build, store and check itineraries.")
 
@@ -29,15 +26,15 @@ def _context(ctx: typer.Context) -> CliContext:
     return ctx.obj  # type: ignore[no-any-return]
 
 
-def _profile(
-    name: str, pace: float, hours: float, gain: float, night: bool, pack_lb: float
-) -> HikerProfile:
-    return HikerProfile(
-        name=name,
+def _hiker(
+    pace: float, hours: float, gain: float, night: bool, pack_lb: float
+) -> HikerSpec:
+    return HikerSpec(
+        name="cli",
         flat_pace_mph=pace,
         max_moving_hours=hours,
         max_daily_gain_ft=gain,
-        reference_load=Mass.pounds(pack_lb),
+        pack_weight_lb=pack_lb,
         night_hiking=night,
     )
 
@@ -64,24 +61,21 @@ def build(
         raise typer.BadParameter("start must be an ISO date such as 2025-07-20") from exc
     context = _context(ctx)
     with context.session() as session:
-        from backpacking.storage.repository import CorridorRepository
-
-        corridors = CorridorRepository(session)
-        corridor = corridors.load(slug)
-        profile = _profile("cli", pace, hours, max_gain, night, pack)
-        request = PlanRequest(
-            corridor=corridor,
-            profile=profile,
-            start_date=start_date,
-            constraints=PlanConstraints(
+        service = PlanningService(session)
+        spec = _hiker(pace, hours, max_gain, night, pack)
+        profile = spec.to_profile()
+        request = service.build_request(
+            slug,
+            start_date,
+            hiker=spec,
+            constraints=ConstraintSpec(
                 max_daily_miles=max_miles,
-                max_daily_gain=Distance.feet(max_gain),
-                max_daily_elapsed=Duration.hours(hours * 1.4),
+                max_daily_gain_ft=max_gain,
+                max_daily_hours=hours * 1.4,
             ),
             aggressiveness=aggressiveness,
-            pack_weight=Mass.pounds(pack),
         )
-        itinerary = solve(request)
+        itinerary = service.build_plan(request)
         typer.echo(render_summary(itinerary, profile))
         typer.echo("")
         typer.echo(render_schedule(itinerary))
@@ -90,9 +84,7 @@ def build(
             typer.echo("")
             typer.echo(render_costs(explain_plan(itinerary, profile, target_hours=target)))
         if save:
-            plan_id = context.plans(session).save(
-                itinerary, corridors.corridor_id(slug), profile.name
-            )
+            plan_id = service.save_plan(itinerary, slug, spec.name)
             typer.echo("")
             typer.echo(f"saved as plan {plan_id}")
 
@@ -126,10 +118,7 @@ def show_plan(
     """Print a stored plan."""
     context = _context(ctx)
     with context.session() as session:
-        from backpacking.storage.repository import CorridorRepository
-
-        corridor = CorridorRepository(session).load(slug)
-        itinerary = context.plans(session).load(plan_id, corridor)
+        itinerary = PlanningService(session).load_plan(plan_id, slug)
     typer.echo(render_schedule(itinerary))
 
 
@@ -144,15 +133,11 @@ def check_plan(
     """Grade a stored plan against the corridor's permit rules."""
     context = _context(ctx)
     with context.session() as session:
-        from backpacking.storage.repository import CorridorRepository
-
-        corridors = CorridorRepository(session)
-        corridor = corridors.load(slug)
-        itinerary = context.plans(session).load(plan_id, corridor)
-        zones = context.permits(session).load(corridors.corridor_id(slug))
-    report = validate_nights(
-        itinerary.camp_nights(has_canister=canister, wants_fire=fire), zones
-    )
+        service = PlanningService(session)
+        itinerary = service.load_plan(plan_id, slug)
+        report = service.check_permits(
+            itinerary, slug, has_canister=canister, wants_fire=fire
+        )
     typer.echo(render_permit_report(report))
     fixes = suggest_fixes(report)
     if fixes:
@@ -182,10 +167,7 @@ def plan_stats(
     """Headline numbers for a stored plan."""
     context = _context(ctx)
     with context.session() as session:
-        from backpacking.storage.repository import CorridorRepository
-
-        corridor = CorridorRepository(session).load(slug)
-        itinerary = context.plans(session).load(plan_id, corridor)
+        itinerary = PlanningService(session).load_plan(plan_id, slug)
     typer.echo(
         keyed(
             {

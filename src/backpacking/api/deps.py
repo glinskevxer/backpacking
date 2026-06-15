@@ -22,6 +22,7 @@ from backpacking.storage.repository import (
     ResupplyRepository,
     WaterRepository,
 )
+from backpacking.services.planning import PlanningService
 from backpacking.storage.session import Database
 
 
@@ -63,3 +64,8 @@ def get_resupply(session: Session = Depends(get_session)) -> ResupplyRepository:
 
 def get_plans(session: Session = Depends(get_session)) -> PlanRepository:
     return PlanRepository(session)
+
+
+def get_service(session: Session = Depends(get_session)) -> PlanningService:
+    """The planning use cases, over this request's session."""
+    return PlanningService(session)
