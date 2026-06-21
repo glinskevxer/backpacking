@@ -1,0 +1,47 @@
+name: backpacking
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: backpacking
+      POSTGRES_PASSWORD: backpacking
+      POSTGRES_DB: backpacking
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backpacking -d backpacking"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  migrate:
+    build:
+      context: .
+      target: runtime
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BACKPACKING_DATABASE_URL: postgresql+psycopg://backpacking:backpacking@db:5432/backpacking
+    command: ["alembic", "upgrade", "head"]
+
+  api:
+    build:
+      context: .
+      target: runtime
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      BACKPACKING_DATABASE_URL: postgresql+psycopg://backpacking:backpacking@db:5432/backpacking
+      BACKPACKING_LOG_JSON: "true"
+      BACKPACKING_LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
