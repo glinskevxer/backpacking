@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from tests.conftest import wp
 
 from backpacking.errors import RouteResolutionError
 from backpacking.trail.alternates import Alternate, resolve_route
@@ -18,7 +19,6 @@ from backpacking.trail.closure import (
 )
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import WaypointKind
-from tests.conftest import wp
 
 JULY = date(2025, 7, 20)
 
@@ -177,11 +177,12 @@ class TestDetours:
         covering = alternates_covering(corridor, FIRE, [TOO_SHORT])
         assert covering == ()
 
-    def test_an_alternate_naming_an_absent_waypoint_is_skipped(
-        self, corridor: Corridor
-    ) -> None:
+    def test_an_alternate_naming_an_absent_waypoint_is_skipped(self, corridor: Corridor) -> None:
         broken = Alternate(
-            id="broken", name="Broken", departs_at="nowhere", rejoins_at="also-nowhere",
+            id="broken",
+            name="Broken",
+            departs_at="nowhere",
+            rejoins_at="also-nowhere",
             length_miles=5.0,
         )
         assert alternates_covering(corridor, FIRE, [broken]) == ()
@@ -190,9 +191,7 @@ class TestDetours:
         chosen = choose_detour(corridor, FIRE, [LONG_DETOUR, SHORT_DETOUR])
         assert chosen.id == "fire-road-detour"
 
-    def test_an_unofficial_detour_is_used_when_it_is_the_only_one(
-        self, corridor: Corridor
-    ) -> None:
+    def test_an_unofficial_detour_is_used_when_it_is_the_only_one(self, corridor: Corridor) -> None:
         assert choose_detour(corridor, FIRE, [LONG_DETOUR]).id == "valley-detour"
 
     def test_no_detour_is_reported(self, corridor: Corridor) -> None:

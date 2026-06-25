@@ -66,8 +66,7 @@ class GpxTrack:
 
     def leg_lengths_m(self) -> list[float]:
         return [
-            haversine(a, b).in_meters
-            for a, b in zip(self.points, self.points[1:], strict=False)
+            haversine(a, b).in_meters for a, b in zip(self.points, self.points[1:], strict=False)
         ]
 
     def cumulative_miles(self) -> list[float]:
@@ -238,7 +237,10 @@ def write_gpx(tracks: Sequence[GpxTrack], waypoints: Iterable[Waypoint] = ()) ->
         node = ET.SubElement(
             root,
             "wpt",
-            {"lat": f"{waypoint.position.latitude:.6f}", "lon": f"{waypoint.position.longitude:.6f}"},
+            {
+                "lat": f"{waypoint.position.latitude:.6f}",
+                "lon": f"{waypoint.position.longitude:.6f}",
+            },
         )
         ET.SubElement(node, "ele").text = f"{waypoint.elevation.in_meters:.1f}"
         ET.SubElement(node, "name").text = waypoint.name

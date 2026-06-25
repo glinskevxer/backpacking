@@ -24,6 +24,6 @@ def ready(session: Session = Depends(get_session)) -> HealthOut:
     """Readiness. Actually round trips a query, because that is the point."""
     try:
         session.execute(text("SELECT 1"))
-    except Exception:  # noqa: BLE001 - readiness reports rather than raises
+    except Exception:
         return HealthOut(status="degraded", version=__version__, database="unreachable")
     return HealthOut(status="ok", version=__version__, database="reachable")

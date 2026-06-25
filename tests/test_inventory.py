@@ -52,7 +52,9 @@ class TestPackItem:
         assert stake.total_mass.in_ounces == pytest.approx(0.4)
 
     def test_repr_shows_the_quantity_when_it_matters(self) -> None:
-        assert repr(PackItem(id="pot", name="Pot", mass=Mass.ounces(4.2))) == "PackItem('pot', 4.2 oz)"
+        assert (
+            repr(PackItem(id="pot", name="Pot", mass=Mass.ounces(4.2))) == "PackItem('pot', 4.2 oz)"
+        )
         many = PackItem(id="stake", name="Stake", mass=Mass.ounces(0.4), quantity=6)
         assert repr(many) == "PackItem('stake', 2.4 oz x6)"
 
@@ -133,7 +135,9 @@ class TestInventoryLookup:
 
 class TestInventoryEditing:
     def test_adding_an_item_returns_a_new_inventory(self, inventory: Inventory) -> None:
-        bigger = inventory.with_item(PackItem(id="umbrella", name="Umbrella", mass=Mass.ounces(8.0)))
+        bigger = inventory.with_item(
+            PackItem(id="umbrella", name="Umbrella", mass=Mass.ounces(8.0))
+        )
         assert bigger.has("umbrella")
         assert not inventory.has("umbrella")
 

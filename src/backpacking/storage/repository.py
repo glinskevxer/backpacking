@@ -129,9 +129,7 @@ class PermitRepository:
         self.session = session
 
     def save(self, corridor_id: int, zones: Sequence[PermitZone]) -> None:
-        self.session.execute(
-            delete(PermitZoneRow).where(PermitZoneRow.corridor_id == corridor_id)
-        )
+        self.session.execute(delete(PermitZoneRow).where(PermitZoneRow.corridor_id == corridor_id))
         for zone in zones:
             self.session.add(mappers.permit_zone_to_row(zone, corridor_id))
         self.session.flush()
@@ -185,9 +183,7 @@ class PlanRepository:
         return row.id
 
     def load(self, plan_id: int, corridor: Corridor) -> Itinerary:
-        statement = (
-            select(PlanRow).where(PlanRow.id == plan_id).options(selectinload(PlanRow.days))
-        )
+        statement = select(PlanRow).where(PlanRow.id == plan_id).options(selectinload(PlanRow.days))
         row = self.session.execute(statement).scalar_one_or_none()
         if row is None:
             raise DataSourceError("no plan with that id", plan_id=plan_id)

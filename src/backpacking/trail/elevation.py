@@ -10,6 +10,7 @@ two datasheets for the same trail rarely agree on total gain.
 
 from __future__ import annotations
 
+import itertools
 from bisect import bisect_left
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -76,7 +77,7 @@ class Climb:
 class ElevationProfile:
     """An ordered run of elevation samples with the queries a planner needs."""
 
-    __slots__ = ("_samples", "_miles")
+    __slots__ = ("_miles", "_samples")
 
     def __init__(self, samples: Sequence[ElevationSample]) -> None:
         ordered = sorted(samples, key=lambda s: s.mile)
@@ -84,11 +85,9 @@ class ElevationProfile:
             raise CorridorError(
                 "an elevation profile needs at least two samples", count=len(ordered)
             )
-        for previous, current in zip(ordered, ordered[1:], strict=False):
+        for previous, current in itertools.pairwise(ordered):
             if current.mile == previous.mile:
-                raise CorridorError(
-                    "duplicate mile in elevation profile", mile=current.mile
-                )
+                raise CorridorError("duplicate mile in elevation profile", mile=current.mile)
         self._samples: tuple[ElevationSample, ...] = tuple(ordered)
         self._miles: tuple[float, ...] = tuple(s.mile for s in ordered)
 
@@ -334,7 +333,7 @@ def grade_histogram(
 
 def _histogram_labels(bin_edges: Sequence[float]) -> list[str]:
     labels = [f"<{bin_edges[0]:+.0%}"]
-    for low, high in zip(bin_edges, bin_edges[1:], strict=False):
+    for low, high in itertools.pairwise(bin_edges):
         labels.append(f"{low:+.0%}..{high:+.0%}")
     labels.append(f">{bin_edges[-1]:+.0%}")
     return labels

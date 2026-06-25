@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from datetime import date, timedelta
 
 import pytest
@@ -20,7 +21,7 @@ SPLITS = [0.0, 15.3, 31.8, 44.7, 62.9, 78.0]
 
 def make_itinerary(corridor: Corridor, estimator: PaceEstimator) -> Itinerary:
     days = []
-    for index, (low, high) in enumerate(zip(SPLITS, SPLITS[1:], strict=False)):
+    for index, (low, high) in enumerate(itertools.pairwise(SPLITS)):
         estimate = estimator.estimate_span(corridor, low, high)
         camp = corridor.nearest_waypoint(high) if high < 78.0 else None
         days.append(
@@ -73,7 +74,9 @@ class TestDayPlan:
             )
 
     def test_camp_id_is_none_without_a_camp(self) -> None:
-        day = DayPlan(index=0, day=START, start_mile=0.0, end_mile=4.0, estimate=LegEstimate.empty())
+        day = DayPlan(
+            index=0, day=START, start_mile=0.0, end_mile=4.0, estimate=LegEstimate.empty()
+        )
         assert day.camp_id is None
 
     def test_to_camp_night_carries_the_mile_and_site(self, itinerary: Itinerary) -> None:
@@ -103,7 +106,13 @@ class TestItineraryInvariants:
             Itinerary(
                 corridor=corridor,
                 days=(
-                    DayPlan(index=0, day=START, start_mile=0.0, end_mile=10.0, estimate=LegEstimate.empty()),
+                    DayPlan(
+                        index=0,
+                        day=START,
+                        start_mile=0.0,
+                        end_mile=10.0,
+                        estimate=LegEstimate.empty(),
+                    ),
                     DayPlan(
                         index=1,
                         day=START + timedelta(days=1),
@@ -119,8 +128,20 @@ class TestItineraryInvariants:
             Itinerary(
                 corridor=corridor,
                 days=(
-                    DayPlan(index=0, day=START, start_mile=0.0, end_mile=10.0, estimate=LegEstimate.empty()),
-                    DayPlan(index=1, day=START, start_mile=10.0, end_mile=20.0, estimate=LegEstimate.empty()),
+                    DayPlan(
+                        index=0,
+                        day=START,
+                        start_mile=0.0,
+                        end_mile=10.0,
+                        estimate=LegEstimate.empty(),
+                    ),
+                    DayPlan(
+                        index=1,
+                        day=START,
+                        start_mile=10.0,
+                        end_mile=20.0,
+                        estimate=LegEstimate.empty(),
+                    ),
                 ),
             )
 
@@ -129,7 +150,13 @@ class TestItineraryInvariants:
             Itinerary(
                 corridor=corridor,
                 days=(
-                    DayPlan(index=1, day=START, start_mile=0.0, end_mile=10.0, estimate=LegEstimate.empty()),
+                    DayPlan(
+                        index=1,
+                        day=START,
+                        start_mile=0.0,
+                        end_mile=10.0,
+                        estimate=LegEstimate.empty(),
+                    ),
                 ),
             )
 
@@ -139,7 +166,9 @@ class TestItineraryInvariants:
 
     def test_build_itinerary_renumbers(self, corridor: Corridor) -> None:
         days = [
-            DayPlan(index=7, day=START, start_mile=0.0, end_mile=10.0, estimate=LegEstimate.empty()),
+            DayPlan(
+                index=7, day=START, start_mile=0.0, end_mile=10.0, estimate=LegEstimate.empty()
+            ),
             DayPlan(
                 index=9,
                 day=START + timedelta(days=1),

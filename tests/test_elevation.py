@@ -84,7 +84,9 @@ class TestGainAndLoss:
     def test_clean_profile_gain_is_the_sum_of_the_ascents(self, sawtooth: ElevationProfile) -> None:
         assert sawtooth.gain().in_feet == pytest.approx(1800.0)
 
-    def test_clean_profile_loss_is_the_sum_of_the_descents(self, sawtooth: ElevationProfile) -> None:
+    def test_clean_profile_loss_is_the_sum_of_the_descents(
+        self, sawtooth: ElevationProfile
+    ) -> None:
         assert sawtooth.loss().in_feet == pytest.approx(1800.0)
 
     def test_net_change_matches_the_endpoints(self, sawtooth: ElevationProfile) -> None:
@@ -101,9 +103,7 @@ class TestGainAndLoss:
         assert noisy.raw_gain().in_feet > noisy.gain().in_feet
 
     def test_a_zero_threshold_matches_the_raw_sum(self, sawtooth: ElevationProfile) -> None:
-        assert sawtooth.gain(threshold_ft=0.0).in_feet == pytest.approx(
-            sawtooth.raw_gain().in_feet
-        )
+        assert sawtooth.gain(threshold_ft=0.0).in_feet == pytest.approx(sawtooth.raw_gain().in_feet)
 
     def test_a_negative_threshold_is_refused(self, sawtooth: ElevationProfile) -> None:
         with pytest.raises(CorridorError, match="must not be negative"):

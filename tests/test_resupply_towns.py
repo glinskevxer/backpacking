@@ -81,7 +81,10 @@ class TestResupplyPoint:
             ResupplyPoint(id="p", name="P", mile=1.0, hours=(time(17, 0), time(9, 0)))
 
     def test_repr(self, towns: TownIndex) -> None:
-        assert repr(towns.get("soda-springs")) == "ResupplyPoint('soda-springs' @ 57.4 mi, full grocery)"
+        assert (
+            repr(towns.get("soda-springs"))
+            == "ResupplyPoint('soda-springs' @ 57.4 mi, full grocery)"
+        )
 
 
 class TestTownIndex:
@@ -143,7 +146,9 @@ class TestTownIndex:
         assert towns.longest_gap(full_only=False) == pytest.approx(23.3)
 
     def test_measuring_a_gap_needs_two_stops(self) -> None:
-        thin = TownIndex([ResupplyPoint(id="p", name="P", mile=4.0, groceries=ServiceLevel.FULL_GROCERY)])
+        thin = TownIndex(
+            [ResupplyPoint(id="p", name="P", mile=4.0, groceries=ServiceLevel.FULL_GROCERY)]
+        )
         with pytest.raises(ResupplyInfeasible, match="at least two stops"):
             thin.longest_gap()
 

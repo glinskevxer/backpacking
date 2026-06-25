@@ -154,7 +154,9 @@ class TestWaterTable:
         assert water.previous_usable(1.0, month=6) is None
 
     def test_adding_a_source_returns_a_new_table(self, water: WaterTable) -> None:
-        cache = WaterSource(id="cache-32", name="Mile 32 Cache", mile=32.0, reliability=Reliability.CACHE)
+        cache = WaterSource(
+            id="cache-32", name="Mile 32 Cache", mile=32.0, reliability=Reliability.CACHE
+        )
         bigger = water.with_source(cache)
         assert len(bigger) == len(water) + 1
         assert len(water) == 11

@@ -106,21 +106,15 @@ class TestNaismithLangmuir:
         assert combined.in_hours == pytest.approx(plain.in_hours)
 
     def test_a_gentle_descent_comes_in_under_flat_time(self) -> None:
-        combined = naismith_langmuir_time(
-            Distance.miles(6.0), Distance.zero(), Distance.feet(1500)
-        )
+        combined = naismith_langmuir_time(Distance.miles(6.0), Distance.zero(), Distance.feet(1500))
         assert combined.in_hours < 2.0
 
     def test_a_steep_descent_comes_in_over_flat_time(self) -> None:
-        combined = naismith_langmuir_time(
-            Distance.miles(2.0), Distance.zero(), Distance.feet(3000)
-        )
+        combined = naismith_langmuir_time(Distance.miles(2.0), Distance.zero(), Distance.feet(3000))
         assert combined.in_hours > 2.0 / 3.0
 
     def test_the_result_never_goes_negative(self) -> None:
-        combined = naismith_langmuir_time(
-            Distance.miles(0.1), Distance.zero(), Distance.feet(4000)
-        )
+        combined = naismith_langmuir_time(Distance.miles(0.1), Distance.zero(), Distance.feet(4000))
         assert combined.in_seconds >= 0.0
 
 
@@ -146,9 +140,7 @@ class TestMunter:
         assert estimate.in_hours == pytest.approx(2.0)
 
     def test_an_even_up_and_down_leg_uses_the_flat_rate(self) -> None:
-        estimate = munter_time(
-            Distance.kilometers(6.0), Distance.meters(300), Distance.meters(300)
-        )
+        estimate = munter_time(Distance.kilometers(6.0), Distance.meters(300), Distance.meters(300))
         assert estimate.in_hours == pytest.approx(12.0 / 6.0)
 
     def test_negative_vertical_is_refused(self) -> None:

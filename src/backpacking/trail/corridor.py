@@ -7,6 +7,7 @@ to the solver, the permit checker and the resupply planner at once.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 
@@ -84,7 +85,7 @@ class Corridor:
         ordered = tuple(sorted(waypoints, key=lambda w: w.mile))
         surfaces = surfaces or {}
         segments: list[Segment] = []
-        for start, end in zip(ordered, ordered[1:], strict=False):
+        for start, end in itertools.pairwise(ordered):
             delta_ft = end.elevation.in_feet - start.elevation.in_feet
             segments.append(
                 Segment(
@@ -270,7 +271,7 @@ def merge_corridors(name: str, parts: Iterable[Corridor]) -> Corridor:
                 )
         waypoints.extend(moved)
         offset = waypoints[-1].mile
-    for start, end in zip(waypoints, waypoints[1:], strict=False):
+    for start, end in itertools.pairwise(waypoints):
         delta = end.elevation.in_feet - start.elevation.in_feet
         segments.append(
             Segment(

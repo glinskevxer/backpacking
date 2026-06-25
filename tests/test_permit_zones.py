@@ -35,14 +35,22 @@ class TestPermitZone:
     def test_a_negative_night_cap_is_refused(self) -> None:
         with pytest.raises(PermitError, match="must not be negative"):
             PermitZone(
-                id="z", name="Z", agency="A", start_mile=0.0, end_mile=4.0,
+                id="z",
+                name="Z",
+                agency="A",
+                start_mile=0.0,
+                end_mile=4.0,
                 max_consecutive_nights=-1,
             )
 
     def test_a_designated_zone_must_list_its_sites(self) -> None:
         with pytest.raises(PermitError, match="must list its sites"):
             PermitZone(
-                id="z", name="Z", agency="A", start_mile=0.0, end_mile=4.0,
+                id="z",
+                name="Z",
+                agency="A",
+                start_mile=0.0,
+                end_mile=4.0,
                 camping=CampingPolicy.DESIGNATED_ONLY,
             )
 
@@ -59,7 +67,11 @@ class TestPermitZone:
 
     def test_a_no_camping_zone_refuses_everything(self) -> None:
         closed = PermitZone(
-            id="z", name="Z", agency="A", start_mile=0.0, end_mile=4.0,
+            id="z",
+            name="Z",
+            agency="A",
+            start_mile=0.0,
+            end_mile=4.0,
             camping=CampingPolicy.NO_CAMPING,
         )
         assert not closed.allows_camp_at(2.0, "anywhere")

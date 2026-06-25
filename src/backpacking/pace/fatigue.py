@@ -138,4 +138,6 @@ def sustainable_effort(profile: HikerProfile, state: FatigueState) -> float:
     """
     headroom = (MAX_FATIGUE - state.fatigue) / MAX_FATIGUE
     ceiling = profile.daily_hour_budget.in_hours
-    return max(2.0, min(ceiling, NEUTRAL_EFFORT_HOURS + headroom * (ceiling - NEUTRAL_EFFORT_HOURS)))
+    return max(
+        2.0, min(ceiling, NEUTRAL_EFFORT_HOURS + headroom * (ceiling - NEUTRAL_EFFORT_HOURS))
+    )

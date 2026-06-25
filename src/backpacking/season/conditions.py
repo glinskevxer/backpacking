@@ -68,8 +68,7 @@ def snowbound_waypoints(
     return tuple(
         waypoint
         for waypoint in corridor
-        if waypoint.kind in wanted
-        and is_snowbound(snow_year, when, waypoint.elevation, aspect)
+        if waypoint.kind in wanted and is_snowbound(snow_year, when, waypoint.elevation, aspect)
     )
 
 
@@ -99,9 +98,7 @@ def earliest_walkable_start(
     """First date every high point on the corridor has melted out."""
     melt = corridor_melt_out(corridor, snow_year, aspect=aspect)
     if not melt:
-        raise SeasonError(
-            "corridor has no passes or summits to melt out", corridor=corridor.name
-        )
+        raise SeasonError("corridor has no passes or summits to melt out", corridor=corridor.name)
     return max(melt.values()) + timedelta(days=margin_days)
 
 
@@ -140,8 +137,7 @@ def check_day(
                     kind="ford",
                     severity=hazard,
                     message=(
-                        f"{waypoint.name} is {describe_hazard(hazard)} "
-                        f"on {day.day.isoformat()}"
+                        f"{waypoint.name} is {describe_hazard(hazard)} " f"on {day.day.isoformat()}"
                     ),
                 )
             )

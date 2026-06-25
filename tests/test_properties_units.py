@@ -28,17 +28,11 @@ from backpacking.pace.functions import (
 )
 from backpacking.units import Distance, Duration, Energy, Mass, Volume
 
-finite = st.floats(
-    min_value=-1e7, max_value=1e7, allow_nan=False, allow_infinity=False
-)
-positive = st.floats(
-    min_value=1e-3, max_value=1e6, allow_nan=False, allow_infinity=False
-)
+finite = st.floats(min_value=-1e7, max_value=1e7, allow_nan=False, allow_infinity=False)
+positive = st.floats(min_value=1e-3, max_value=1e6, allow_nan=False, allow_infinity=False)
 latitudes = st.floats(min_value=-89.0, max_value=89.0, allow_nan=False)
 longitudes = st.floats(min_value=-179.0, max_value=179.0, allow_nan=False)
-grades = st.floats(
-    min_value=-MAX_MODELLED_GRADE, max_value=MAX_MODELLED_GRADE, allow_nan=False
-)
+grades = st.floats(min_value=-MAX_MODELLED_GRADE, max_value=MAX_MODELLED_GRADE, allow_nan=False)
 
 
 class TestDistanceProperties:
@@ -62,13 +56,12 @@ class TestDistanceProperties:
     @given(finite, finite)
     def test_subtraction_undoes_addition(self, first: float, second: float) -> None:
         combined = Distance.miles(first) + Distance.miles(second)
-        assert (combined - Distance.miles(second)).in_miles == pytest.approx(
-            first, abs=1e-6
-        )
+        assert (combined - Distance.miles(second)).in_miles == pytest.approx(first, abs=1e-6)
 
     @given(finite)
     def test_negation_is_its_own_inverse(self, value: float) -> None:
-        assert (-(-Distance.miles(value))).in_miles == pytest.approx(value)
+        once = -Distance.miles(value)
+        assert (-once).in_miles == pytest.approx(value)
 
     @given(finite)
     def test_absolute_value_is_never_negative(self, value: float) -> None:
@@ -214,9 +207,7 @@ class TestPaceProperties:
     )
     def test_a_longer_leg_never_takes_less_time(self, miles: float, gain: float) -> None:
         shorter = munter_time(Distance.miles(miles), Distance.feet(gain), Distance.zero())
-        longer = munter_time(
-            Distance.miles(miles * 2.0), Distance.feet(gain), Distance.zero()
-        )
+        longer = munter_time(Distance.miles(miles * 2.0), Distance.feet(gain), Distance.zero())
         assert longer >= shorter
 
     @given(
@@ -229,7 +220,5 @@ class TestPaceProperties:
     ) -> None:
         assume(extra > 0.0)
         base = munter_time(Distance.miles(miles), Distance.feet(gain), Distance.zero())
-        more = munter_time(
-            Distance.miles(miles), Distance.feet(gain + extra), Distance.zero()
-        )
+        more = munter_time(Distance.miles(miles), Distance.feet(gain + extra), Distance.zero())
         assert more >= base

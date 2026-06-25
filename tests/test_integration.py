@@ -13,6 +13,7 @@ from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.conftest import build_inventory
 from typer.testing import CliRunner
 
 from backpacking.api.app import create_app
@@ -21,7 +22,6 @@ from backpacking.config import Settings
 from backpacking.food.rations import plan_rations
 from backpacking.gear.loadout import Loadout, fuel_for
 from backpacking.pace.estimator import PaceEstimator
-from backpacking.pace.models import HikerProfile
 from backpacking.permits.validate import suggest_fixes, validate_nights
 from backpacking.plan.rebalance import mark_resupply, rebalance_for_rest
 from backpacking.plan.solver import PlanRequest, solve
@@ -42,7 +42,6 @@ from backpacking.storage.session import Database
 from backpacking.trail.datasheet import corridor_to_rows, load_corridor, write_datasheet
 from backpacking.units import Energy, Volume
 from backpacking.water.carry import find_dry_stretches, plan_carry
-from tests.conftest import build_inventory
 
 START = date(2025, 7, 20)
 
@@ -94,9 +93,7 @@ class TestFullPlanningRun:
         assert strategy.longest_carry.days <= 4.0
 
         # The pack is built from the longest carry.
-        rations = plan_rations(
-            strategy.longest_carry.days, Energy.kilocalories(3000.0)
-        )
+        rations = plan_rations(strategy.longest_carry.days, Energy.kilocalories(3000.0))
         loadout = Loadout(
             inventory=build_inventory(),
             rations=rations,
@@ -118,9 +115,7 @@ class TestFullPlanningRun:
         assert plan.covers_whole_corridor()
 
         # It is reshaped for rest and annotated with the resupply stops.
-        reshaped = mark_resupply(
-            rebalance_for_rest(plan, hiker, threshold=0.02), strategy.stops
-        )
+        reshaped = mark_resupply(rebalance_for_rest(plan, hiker, threshold=0.02), strategy.stops)
         assert reshaped.total_distance.in_miles == pytest.approx(78.0)
 
         # Water is checked against the month it actually falls in.
@@ -148,9 +143,7 @@ class TestFullPlanningRun:
         with database.session() as session:
             restored = PlanRepository(session).load(plan_id, corridor)
         assert len(restored) == len(reshaped)
-        assert restored.total_distance.in_miles == pytest.approx(
-            reshaped.total_distance.in_miles
-        )
+        assert restored.total_distance.in_miles == pytest.approx(reshaped.total_distance.in_miles)
 
         # And it exports to everything a hiker leaves with.
         ics = to_ics(restored)
@@ -267,19 +260,13 @@ class TestApiAndCliAgree:
 
 
 class TestRegressionsWeHaveHit:
-    def test_a_plan_shifted_across_a_month_boundary_stays_valid(
-        self, workspace, hiker
-    ) -> None:
+    def test_a_plan_shifted_across_a_month_boundary_stays_valid(self, workspace, hiker) -> None:
         """Shifting dates must not disturb the mileage or the day ordering."""
         with workspace["database"].session() as session:
             corridor = CorridorRepository(session).load("crystal-range")
-        plan = solve(
-            PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 7, 29))
-        )
+        plan = solve(PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 7, 29)))
         shifted = plan.shifted_to(date(2025, 8, 30))
-        assert shifted.total_distance.in_miles == pytest.approx(
-            plan.total_distance.in_miles
-        )
+        assert shifted.total_distance.in_miles == pytest.approx(plan.total_distance.in_miles)
         assert [day.day for day in shifted] == sorted(day.day for day in shifted)
 
     def test_a_corridor_deleted_takes_its_plans_with_it(self, workspace, hiker) -> None:
@@ -287,9 +274,7 @@ class TestRegressionsWeHaveHit:
         with database.session() as session:
             corridors = CorridorRepository(session)
             corridor = corridors.load("crystal-range")
-            plan = solve(
-                PlanRequest(corridor=corridor, profile=hiker, start_date=START)
-            )
+            plan = solve(PlanRequest(corridor=corridor, profile=hiker, start_date=START))
             plan_id = PlanRepository(session).save(
                 plan, corridors.corridor_id("crystal-range"), hiker.name
             )
@@ -301,9 +286,7 @@ class TestRegressionsWeHaveHit:
             with pytest.raises(DataSourceError):
                 PlanRepository(session).load(plan_id, corridor)
 
-    def test_rest_days_do_not_change_where_the_hiker_ends_up(
-        self, workspace, hiker
-    ) -> None:
+    def test_rest_days_do_not_change_where_the_hiker_ends_up(self, workspace, hiker) -> None:
         with workspace["database"].session() as session:
             corridor = CorridorRepository(session).load("crystal-range")
         plan = solve(PlanRequest(corridor=corridor, profile=hiker, start_date=START))

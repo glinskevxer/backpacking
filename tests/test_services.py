@@ -99,15 +99,11 @@ class TestBuildAndSolve:
         assert request.resolved_end() == pytest.approx(78.0)
 
     def test_explicit_miles_reach_the_request(self, service: PlanningService) -> None:
-        request = service.build_request(
-            "crystal-range", START, start_mile=23.6, end_mile=57.4
-        )
+        request = service.build_request("crystal-range", START, start_mile=23.6, end_mile=57.4)
         assert request.resolved_start() == pytest.approx(23.6)
 
     def test_the_hiker_spec_reaches_the_request(self, service: PlanningService) -> None:
-        request = service.build_request(
-            "crystal-range", START, hiker=HikerSpec(flat_pace_mph=2.2)
-        )
+        request = service.build_request("crystal-range", START, hiker=HikerSpec(flat_pace_mph=2.2))
         assert request.profile.flat_pace_mph == pytest.approx(2.2)
 
     def test_the_pack_weight_follows_the_hiker(self, service: PlanningService) -> None:
@@ -156,9 +152,7 @@ class TestSaveAndLoad:
         assert service.load_plan(plan_id, "crystal-range").end_mile == pytest.approx(78.0)
 
     def test_the_hiker_name_is_recorded(self, service: PlanningService) -> None:
-        plan_id, _ = service.plan_and_save(
-            "crystal-range", START, hiker=HikerSpec(name="ada")
-        )
+        plan_id, _ = service.plan_and_save("crystal-range", START, hiker=HikerSpec(name="ada"))
         assert service.load_plan(plan_id, "crystal-range") is not None
 
     def test_loading_an_absent_plan_raises(self, service: PlanningService) -> None:
@@ -167,9 +161,7 @@ class TestSaveAndLoad:
 
 
 class TestPermitsAndExplain:
-    def test_permits_are_checked_against_the_stored_zones(
-        self, service: PlanningService
-    ) -> None:
+    def test_permits_are_checked_against_the_stored_zones(self, service: PlanningService) -> None:
         plan = service.plan("crystal-range", START)
         report = service.check_permits(plan, "crystal-range")
         assert not report.is_permittable
@@ -183,9 +175,7 @@ class TestPermitsAndExplain:
     def test_wanting_a_fire_adds_findings(self, service: PlanningService) -> None:
         plan = service.plan("crystal-range", START)
         quiet = service.check_permits(plan, "crystal-range", has_canister=True)
-        lit = service.check_permits(
-            plan, "crystal-range", has_canister=True, wants_fire=True
-        )
+        lit = service.check_permits(plan, "crystal-range", has_canister=True, wants_fire=True)
         assert len(lit.findings) >= len(quiet.findings)
 
     def test_explain_returns_a_row_per_day(self, service: PlanningService) -> None:
@@ -212,9 +202,7 @@ class TestServiceAgreesWithTheLayersAboveIt:
             },
         ).json()
         assert len(over_http["days"]) == len(direct)
-        assert over_http["total_miles"] == pytest.approx(
-            direct.total_distance.in_miles, abs=0.01
-        )
+        assert over_http["total_miles"] == pytest.approx(direct.total_distance.in_miles, abs=0.01)
 
     def test_the_bundle_matches_the_repositories(
         self, service: PlanningService, session: Session

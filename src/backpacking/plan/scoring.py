@@ -47,9 +47,7 @@ class ScoringWeights:
 DEFAULT_WEIGHTS = ScoringWeights()
 
 
-def effort_cost(
-    estimate: LegEstimate, profile: HikerProfile, target_hours: float
-) -> float:
+def effort_cost(estimate: LegEstimate, profile: HikerProfile, target_hours: float) -> float:
     """Squared deviation from the target day, in hours.
 
     Squared rather than absolute so that one very long day costs more than two
@@ -114,9 +112,7 @@ def day_cost(
 def target_hours_for(profile: HikerProfile, *, aggressiveness: float = 0.8) -> float:
     """The day length the plan aims at, as a fraction of the hour budget."""
     if not 0.0 < aggressiveness <= 1.0:
-        raise PlanInfeasible(
-            "aggressiveness must fall in (0, 1]", aggressiveness=aggressiveness
-        )
+        raise PlanInfeasible("aggressiveness must fall in (0, 1]", aggressiveness=aggressiveness)
     return profile.daily_hour_budget.in_hours * aggressiveness
 
 

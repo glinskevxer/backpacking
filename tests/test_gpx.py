@@ -182,8 +182,9 @@ class TestParseFailures:
 
     def test_a_document_with_no_tracks_has_no_primary(self) -> None:
         empty = '<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"></gpx>'
+        document = parse_gpx(empty)
         with pytest.raises(DataSourceError, match="contains no tracks"):
-            parse_gpx(empty).primary
+            _ = document.primary
 
     def test_missing_file(self, tmp_path) -> None:
         with pytest.raises(DataSourceError, match="could not read"):
@@ -221,12 +222,10 @@ class TestRoundTrip:
 
     def test_writing_preserves_waypoint_kinds(self, document) -> None:
         again = parse_gpx(write_gpx(document.tracks, document.waypoints))
-        assert {w.id: w.kind for w in again.waypoints} == {
-            w.id: w.kind for w in document.waypoints
-        }
+        assert {w.id: w.kind for w in again.waypoints} == {w.id: w.kind for w in document.waypoints}
 
     def test_a_waypoint_without_a_position_is_skipped(self, document) -> None:
-        stripped = [w for w in document.waypoints]
+        stripped = list(document.waypoints)
         text = write_gpx(document.tracks, [stripped[0].with_mile(4.0)])
         assert "Echo Lake Trailhead" in text
 

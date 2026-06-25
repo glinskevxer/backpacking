@@ -72,8 +72,7 @@ def explain_plan(
 ) -> tuple[DayExplanation, ...]:
     """Break every day's cost into its terms."""
     return tuple(
-        explain_day(day, profile, target_hours=target_hours, weights=weights)
-        for day in itinerary
+        explain_day(day, profile, target_hours=target_hours, weights=weights) for day in itinerary
     )
 
 

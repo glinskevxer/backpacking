@@ -80,9 +80,7 @@ def export_trip_sheet(
         corridor = corridors.load(slug)
         itinerary = context.plans(session).load(plan_id, corridor)
         towns = context.resupply(session).load(corridors.corridor_id(slug))
-    text = render_trip_sheet(
-        itinerary, hiker_name=hiker, emergency_contact=contact, towns=towns
-    )
+    text = render_trip_sheet(itinerary, hiker_name=hiker, emergency_contact=contact, towns=towns)
     if out is None:
         typer.echo(text)
     else:
@@ -103,9 +101,7 @@ def season(
     snow_year = SnowYear(year=year, percent_of_median=percent)
     with context.session() as session:
         corridor = CorridorRepository(session).load(slug)
-        itinerary = (
-            None if plan_id is None else context.plans(session).load(plan_id, corridor)
-        )
+        itinerary = None if plan_id is None else context.plans(session).load(plan_id, corridor)
     typer.echo(f"{year} is a {snow_year.descriptor} year at {percent:.0f}% of median")
     typer.echo("")
     for waypoint_id, when in sorted(

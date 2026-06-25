@@ -99,19 +99,13 @@ class TestTripSheetEndpoint:
 
 class TestSeasonEndpoints:
     def test_the_outlook_lists_melt_out_dates(self, api: TestClient) -> None:
-        body = api.get(
-            "/reports/season/crystal-range?year=2025&percent_of_median=100"
-        ).json()
+        body = api.get("/reports/season/crystal-range?year=2025&percent_of_median=100").json()
         assert set(body["melt_out"]) == {"mosquito-pass", "granite-chief", "mule-ear-pass"}
         assert body["descriptor"] == "near median"
 
     def test_a_heavy_year_starts_later(self, api: TestClient) -> None:
-        median = api.get(
-            "/reports/season/crystal-range?year=2025&percent_of_median=100"
-        ).json()
-        heavy = api.get(
-            "/reports/season/crystal-range?year=2025&percent_of_median=180"
-        ).json()
+        median = api.get("/reports/season/crystal-range?year=2025&percent_of_median=100").json()
+        heavy = api.get("/reports/season/crystal-range?year=2025&percent_of_median=180").json()
         assert heavy["earliest_start"] > median["earliest_start"]
 
     def test_an_absurd_snowpack_is_rejected(self, api: TestClient) -> None:
@@ -165,9 +159,7 @@ class TestReportCommands:
         return runner.invoke(cli_app, ["--database", url, *args])
 
     def saved(self, runner: CliRunner, url: str) -> None:
-        self.run(
-            runner, url, "plan", "build", "crystal-range", "--start", "2025-07-20", "--save"
-        )
+        self.run(runner, url, "plan", "build", "crystal-range", "--start", "2025-07-20", "--save")
 
     def test_json_export_to_stdout(self, runner: CliRunner, cli_db: str) -> None:
         self.saved(runner, cli_db)
@@ -196,16 +188,32 @@ class TestReportCommands:
     def test_trip_sheet_to_stdout(self, runner: CliRunner, cli_db: str) -> None:
         self.saved(runner, cli_db)
         result = self.run(
-            runner, cli_db, "report", "tripsheet", "1", "-c", "crystal-range",
-            "--hiker", "Ada", "--contact", "Ruth",
+            runner,
+            cli_db,
+            "report",
+            "tripsheet",
+            "1",
+            "-c",
+            "crystal-range",
+            "--hiker",
+            "Ada",
+            "--contact",
+            "Ruth",
         )
         assert result.exit_code == 0
         assert "TRIP SHEET" in result.output
 
     def test_season_lists_melt_out(self, runner: CliRunner, cli_db: str) -> None:
         result = self.run(
-            runner, cli_db, "report", "season", "crystal-range", "--year", "2025",
-            "--percent", "160",
+            runner,
+            cli_db,
+            "report",
+            "season",
+            "crystal-range",
+            "--year",
+            "2025",
+            "--percent",
+            "160",
         )
         assert result.exit_code == 0
         assert "heavy year" in result.output or "exceptional year" in result.output
@@ -214,24 +222,39 @@ class TestReportCommands:
     def test_season_can_check_a_plan(self, runner: CliRunner, cli_db: str) -> None:
         self.saved(runner, cli_db)
         result = self.run(
-            runner, cli_db, "report", "season", "crystal-range", "--year", "2025",
-            "--percent", "180", "--plan", "1",
+            runner,
+            cli_db,
+            "report",
+            "season",
+            "crystal-range",
+            "--year",
+            "2025",
+            "--percent",
+            "180",
+            "--plan",
+            "1",
         )
         assert result.exit_code == 0
         assert "snow line" in result.output or "further note" in result.output
 
     def test_melt_prints_one_date(self, runner: CliRunner, cli_db: str) -> None:
-        result = self.run(
-            runner, cli_db, "report", "melt", "crystal-range", "--year", "2025"
-        )
+        result = self.run(runner, cli_db, "report", "melt", "crystal-range", "--year", "2025")
         assert result.exit_code == 0
         assert result.output.strip().startswith("2025-")
 
     def test_compare_two_plans(self, runner: CliRunner, cli_db: str) -> None:
         self.saved(runner, cli_db)
         self.run(
-            runner, cli_db, "plan", "build", "crystal-range", "--start", "2025-07-20",
-            "--max-miles", "13", "--save",
+            runner,
+            cli_db,
+            "plan",
+            "build",
+            "crystal-range",
+            "--start",
+            "2025-07-20",
+            "--max-miles",
+            "13",
+            "--save",
         )
         result = self.run(runner, cli_db, "report", "compare", "1", "2", "-c", "crystal-range")
         assert result.exit_code == 0

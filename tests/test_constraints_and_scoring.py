@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from tests.conftest import wp
 
 from backpacking.errors import PlanInfeasible
 from backpacking.pace.models import HikerProfile, LegEstimate
@@ -24,7 +25,6 @@ from backpacking.plan.scoring import (
 )
 from backpacking.trail.models import WaypointKind
 from backpacking.units import Distance, Duration
-from tests.conftest import wp
 
 
 def leg(miles: float, hours: float, gain_ft: float = 0.0) -> LegEstimate:
@@ -52,9 +52,7 @@ class TestPlanConstraints:
 
     def test_the_final_day_is_exempt_from_the_minimum(self) -> None:
         limits = PlanConstraints()
-        assert limits.day_is_admissible(
-            2.0, Distance.feet(200), Duration.hours(1.0), is_final=True
-        )
+        assert limits.day_is_admissible(2.0, Distance.feet(200), Duration.hours(1.0), is_final=True)
 
     def test_too_much_climb_is_refused(self) -> None:
         limits = PlanConstraints()
@@ -160,9 +158,7 @@ class TestScoring:
         junction = wp("junction", "Junction", 57.4, 6870, WaypointKind.JUNCTION)
         assert camp_cost(town) < camp_cost(junction)
 
-    def test_a_day_inside_the_budget_has_no_late_finish_cost(
-        self, hiker: HikerProfile
-    ) -> None:
+    def test_a_day_inside_the_budget_has_no_late_finish_cost(self, hiker: HikerProfile) -> None:
         assert late_finish_cost(leg(18.0, 7.0), hiker) == pytest.approx(0.0)
 
     def test_a_day_past_the_budget_is_penalised(self, hiker: HikerProfile) -> None:

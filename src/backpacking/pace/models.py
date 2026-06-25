@@ -64,13 +64,9 @@ class HikerProfile:
                 "break fraction must fall in [0, 1)", break_fraction=self.break_fraction
             )
         if self.max_moving_hours <= 0.0:
-            raise PaceModelError(
-                "max moving hours must be positive", hours=self.max_moving_hours
-            )
+            raise PaceModelError("max moving hours must be positive", hours=self.max_moving_hours)
         if self.max_daily_gain_ft <= 0.0:
-            raise PaceModelError(
-                "max daily gain must be positive", gain_ft=self.max_daily_gain_ft
-            )
+            raise PaceModelError("max daily gain must be positive", gain_ft=self.max_daily_gain_ft)
         if self.load_penalty_per_pound < 0.0:
             raise PaceModelError(
                 "load penalty must not be negative", penalty=self.load_penalty_per_pound

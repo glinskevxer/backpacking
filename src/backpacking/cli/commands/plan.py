@@ -26,9 +26,7 @@ def _context(ctx: typer.Context) -> CliContext:
     return ctx.obj  # type: ignore[no-any-return]
 
 
-def _hiker(
-    pace: float, hours: float, gain: float, night: bool, pack_lb: float
-) -> HikerSpec:
+def _hiker(pace: float, hours: float, gain: float, night: bool, pack_lb: float) -> HikerSpec:
     return HikerSpec(
         name="cli",
         flat_pace_mph=pace,
@@ -135,9 +133,7 @@ def check_plan(
     with context.session() as session:
         service = PlanningService(session)
         itinerary = service.load_plan(plan_id, slug)
-        report = service.check_permits(
-            itinerary, slug, has_canister=canister, wants_fire=fire
-        )
+        report = service.check_permits(itinerary, slug, has_canister=canister, wants_fire=fire)
     typer.echo(render_permit_report(report))
     fixes = suggest_fixes(report)
     if fixes:

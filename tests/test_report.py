@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -31,7 +31,7 @@ from backpacking.report.tripsheet import render_trip_sheet
 from backpacking.trail.corridor import Corridor
 
 START = date(2025, 7, 20)
-STAMP = datetime(2025, 7, 1, 12, 0, tzinfo=timezone.utc)
+STAMP = datetime(2025, 7, 1, 12, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -70,9 +70,7 @@ class TestPlanSerialisation:
         body = plan_to_dict(plan, "crystal-range", generated_at=STAMP)
         assert body["generated_at"].startswith("2025-07-01T12:00")
 
-    def test_the_hiker_is_included_when_given(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_the_hiker_is_included_when_given(self, plan: Itinerary, hiker: HikerProfile) -> None:
         body = plan_to_dict(plan, "crystal-range", profile=hiker, generated_at=STAMP)
         assert body["hiker"]["flat_pace_mph"] == pytest.approx(2.7)
 
@@ -228,9 +226,7 @@ class TestTripSheet:
         assert "Tamarack Creek" in text
 
     def test_resupply_is_included_when_towns_are_given(self, plan: Itinerary, towns) -> None:
-        text = render_trip_sheet(
-            plan, hiker_name="Ada", emergency_contact="Ruth", towns=towns
-        )
+        text = render_trip_sheet(plan, hiker_name="Ada", emergency_contact="Ruth", towns=towns)
         assert "RESUPPLY AND SERVICES" in text
         assert "Soda Springs" in text
 
@@ -239,9 +235,7 @@ class TestTripSheet:
         assert "RESUPPLY AND SERVICES" not in text
 
     def test_it_fits_a_printed_page_width(self, plan: Itinerary, towns) -> None:
-        text = render_trip_sheet(
-            plan, hiker_name="Ada", emergency_contact="Ruth", towns=towns
-        )
+        text = render_trip_sheet(plan, hiker_name="Ada", emergency_contact="Ruth", towns=towns)
         assert all(len(line) <= 80 for line in text.splitlines())
 
     def test_a_missing_hiker_name_is_refused(self, plan: Itinerary) -> None:

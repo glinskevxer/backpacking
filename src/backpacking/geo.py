@@ -9,6 +9,7 @@ mileage data these numbers are compared against.
 
 from __future__ import annotations
 
+import itertools
 import math
 from dataclasses import dataclass
 
@@ -63,8 +64,7 @@ class BoundingBox:
 
     def contains(self, point: GeoPoint) -> bool:
         return (
-            self.south <= point.latitude <= self.north
-            and self.west <= point.longitude <= self.east
+            self.south <= point.latitude <= self.north and self.west <= point.longitude <= self.east
         )
 
     def expanded(self, margin_degrees: float) -> BoundingBox:
@@ -106,7 +106,9 @@ def cross_track_distance(point: GeoPoint, start: GeoPoint, end: GeoPoint) -> Dis
     angular = haversine(start, point).in_meters / EARTH_RADIUS_M
     theta_path = math.radians(initial_bearing(start, end))
     theta_point = math.radians(initial_bearing(start, point))
-    return Distance.meters(math.asin(math.sin(angular) * math.sin(theta_point - theta_path)) * EARTH_RADIUS_M)
+    return Distance.meters(
+        math.asin(math.sin(angular) * math.sin(theta_point - theta_path)) * EARTH_RADIUS_M
+    )
 
 
 def along_track_distance(point: GeoPoint, start: GeoPoint, end: GeoPoint) -> Distance:
@@ -154,7 +156,7 @@ def _interpolate_elevation(
 def path_length(points: list[GeoPoint]) -> Distance:
     """Summed great circle length of a polyline."""
     total = 0.0
-    for first, second in zip(points, points[1:], strict=False):
+    for first, second in itertools.pairwise(points):
         total += haversine(first, second).in_meters
     return Distance.meters(total)
 

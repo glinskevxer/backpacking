@@ -93,9 +93,7 @@ class RationPlan:
         if self.days <= 0.0:
             raise LoadoutError("a ration plan covers at least part of a day", days=self.days)
         if self.density_kcal_per_oz <= 0.0:
-            raise LoadoutError(
-                "caloric density must be positive", density=self.density_kcal_per_oz
-            )
+            raise LoadoutError("caloric density must be positive", density=self.density_kcal_per_oz)
 
     @property
     def total_energy(self) -> Energy:

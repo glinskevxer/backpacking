@@ -161,7 +161,9 @@ class TestRationPlan:
 
     def test_a_zero_day_plan_is_refused(self) -> None:
         with pytest.raises(LoadoutError, match="at least part of a day"):
-            RationPlan(days=0.0, daily_energy=Energy.kilocalories(3000.0), density_kcal_per_oz=125.0)
+            RationPlan(
+                days=0.0, daily_energy=Energy.kilocalories(3000.0), density_kcal_per_oz=125.0
+            )
 
     def test_a_zero_density_plan_is_refused(self) -> None:
         with pytest.raises(LoadoutError, match="density must be positive"):
@@ -195,7 +197,13 @@ class TestPlanFromItems:
 class TestDescribeDensity:
     @pytest.mark.parametrize(
         ("density", "word"),
-        [(160.0, "excellent"), (145.0, "excellent"), (130.0, "good"), (110.0, "workable"), (80.0, "heavy")],
+        [
+            (160.0, "excellent"),
+            (145.0, "excellent"),
+            (130.0, "good"),
+            (110.0, "workable"),
+            (80.0, "heavy"),
+        ],
     )
     def test_the_words_match_the_thresholds(self, density: float, word: str) -> None:
         assert describe_density(density) == word

@@ -17,7 +17,7 @@ Skin out weight is all three, and it is the honest one.
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 
 from backpacking.errors import LoadoutError
@@ -148,9 +148,7 @@ class Inventory:
     @property
     def big_three_weight(self) -> Mass:
         return _sum_mass(
-            item
-            for item in self._items
-            if item.category.is_big_three and item.counts_towards_base
+            item for item in self._items if item.category.is_big_three and item.counts_towards_base
         )
 
     def weight_by_category(self) -> dict[ItemCategory, Mass]:

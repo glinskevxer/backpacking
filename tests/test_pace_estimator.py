@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from tests.conftest import wp
 
 from backpacking.errors import PaceModelError
 from backpacking.pace.estimator import PaceEstimator, PaceModel
@@ -11,7 +12,6 @@ from backpacking.pace.models import HikerProfile, LegEstimate
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import Segment, Surface
 from backpacking.units import Distance, Duration, Mass
-from tests.conftest import wp
 
 
 class TestCalibration:
@@ -33,7 +33,9 @@ class TestCalibration:
 
 class TestBaseTime:
     def test_zero_distance_is_zero_time(self, estimator: PaceEstimator) -> None:
-        assert estimator.base_time(Distance.zero(), Distance.zero(), Distance.zero()).in_seconds == 0.0
+        assert (
+            estimator.base_time(Distance.zero(), Distance.zero(), Distance.zero()).in_seconds == 0.0
+        )
 
     def test_negative_distance_is_refused(self, estimator: PaceEstimator) -> None:
         with pytest.raises(PaceModelError, match="must not be negative"):
@@ -44,9 +46,7 @@ class TestBaseTime:
         self, hiker: HikerProfile, model: PaceModel
     ) -> None:
         estimator = PaceEstimator(profile=hiker, model=model)
-        estimate = estimator.base_time(
-            Distance.miles(5.0), Distance.feet(1400), Distance.feet(600)
-        )
+        estimate = estimator.base_time(Distance.miles(5.0), Distance.feet(1400), Distance.feet(600))
         assert estimate.in_hours > 0.0
 
     def test_the_models_give_different_answers(self, hiker: HikerProfile) -> None:
@@ -55,7 +55,7 @@ class TestBaseTime:
             model: PaceEstimator(profile=hiker, model=model).base_time(*args).in_hours
             for model in PaceModel
         }
-        assert len(set(round(t, 3) for t in times.values())) == 3
+        assert len({round(t, 3) for t in times.values()}) == 3
 
 
 class TestEstimateSegment:
@@ -132,7 +132,10 @@ class TestEstimateSegment:
             gain=Distance.zero(),
             loss=Distance.zero(),
         )
-        assert estimator.estimate_segment(high).moving_time > estimator.estimate_segment(low).moving_time
+        assert (
+            estimator.estimate_segment(high).moving_time
+            > estimator.estimate_segment(low).moving_time
+        )
 
 
 class TestEstimateSpan:
@@ -161,9 +164,7 @@ class TestEstimateSpan:
     def test_an_empty_span_is_empty(self, estimator: PaceEstimator, corridor: Corridor) -> None:
         assert estimator.estimate_span(corridor, 12.0, 12.0) == LegEstimate.empty()
 
-    def test_a_reversed_span_is_refused(
-        self, estimator: PaceEstimator, corridor: Corridor
-    ) -> None:
+    def test_a_reversed_span_is_refused(self, estimator: PaceEstimator, corridor: Corridor) -> None:
         with pytest.raises(PaceModelError, match="must advance"):
             estimator.estimate_span(corridor, 20.0, 10.0)
 

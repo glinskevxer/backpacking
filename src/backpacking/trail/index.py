@@ -12,6 +12,7 @@ on a boundary belongs to the interval that starts there.
 
 from __future__ import annotations
 
+import itertools
 from bisect import bisect_left, bisect_right
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -34,7 +35,7 @@ class MileIndex:
     def __init__(self, miles: Sequence[float]) -> None:
         if len(miles) < 1:
             raise ValueError("a mile index needs at least one key")
-        for previous, current in zip(miles, miles[1:], strict=False):
+        for previous, current in itertools.pairwise(miles):
             if current <= previous:
                 raise ValueError(f"mile index keys must ascend, got {previous} then {current}")
         self._miles: tuple[float, ...] = tuple(miles)

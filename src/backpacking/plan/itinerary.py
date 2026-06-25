@@ -49,9 +49,7 @@ class DayPlan:
                 end_mile=self.end_mile,
             )
         if self.is_zero and self.end_mile != self.start_mile:
-            raise PlanInfeasible(
-                "a zero day covers no ground", index=self.index, miles=self.miles
-            )
+            raise PlanInfeasible("a zero day covers no ground", index=self.index, miles=self.miles)
 
     @property
     def miles(self) -> float:
@@ -213,8 +211,7 @@ class Itinerary:
 
     def covers_whole_corridor(self) -> bool:
         return (
-            self.start_mile == self.corridor.start_mile
-            and self.end_mile == self.corridor.end_mile
+            self.start_mile == self.corridor.start_mile and self.end_mile == self.corridor.end_mile
         )
 
     def with_zero_day_after(self, index: int) -> Itinerary:
@@ -271,11 +268,7 @@ def _reindexed(day: DayPlan, index: int, when: date) -> DayPlan:
     )
 
 
-def build_itinerary(
-    corridor: Corridor, days: Sequence[DayPlan], *, label: str = ""
-) -> Itinerary:
+def build_itinerary(corridor: Corridor, days: Sequence[DayPlan], *, label: str = "") -> Itinerary:
     """Convenience constructor that renumbers days from zero."""
-    renumbered = tuple(
-        _reindexed(day, index, day.day) for index, day in enumerate(days)
-    )
+    renumbered = tuple(_reindexed(day, index, day.day) for index, day in enumerate(days))
     return Itinerary(corridor=corridor, days=renumbered, label=label)

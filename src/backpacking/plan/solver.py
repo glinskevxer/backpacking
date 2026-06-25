@@ -113,7 +113,6 @@ def stop_miles(request: PlanRequest) -> tuple[float, ...]:
 
 def solve(request: PlanRequest) -> Itinerary:
     """Cheapest admissible itinerary, by shortest path over the stop graph."""
-    corridor = request.corridor
     estimator = PaceEstimator(profile=request.profile)
     constraints = request.constraints
     target = target_hours_for(request.profile, aggressiveness=request.aggressiveness)

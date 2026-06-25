@@ -13,6 +13,7 @@ and the strategy module trades those off.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import date, time
@@ -84,10 +85,7 @@ class ResupplyPoint:
         """Round trip time to get into town and back to the trail."""
         if hitch_speed_mph <= 0.0 or walk_mph <= 0.0:
             raise ResupplyInfeasible("access speeds must be positive", point=self.id)
-        hours = (
-            2.0 * self.hitch.in_miles / hitch_speed_mph
-            + 2.0 * self.walk_in.in_miles / walk_mph
-        )
+        hours = 2.0 * self.hitch.in_miles / hitch_speed_mph + 2.0 * self.walk_in.in_miles / walk_mph
         return Duration.hours(hours) + self.shuttle_wait * 2.0
 
     def is_open_on(self, when: date) -> bool:
@@ -103,9 +101,7 @@ class ResupplyPoint:
         return None
 
     def __repr__(self) -> str:
-        return (
-            f"ResupplyPoint({self.id!r} @ {self.mile:.1f} mi, {self.groceries.label})"
-        )
+        return f"ResupplyPoint({self.id!r} @ {self.mile:.1f} mi, {self.groceries.label})"
 
 
 class TownIndex:
@@ -147,9 +143,7 @@ class TownIndex:
     def between(self, start_mile: float, end_mile: float) -> tuple[ResupplyPoint, ...]:
         return tuple(p for p in self._points if start_mile <= p.mile <= end_mile)
 
-    def next_after(
-        self, mile: float, *, full_only: bool = False
-    ) -> ResupplyPoint | None:
+    def next_after(self, mile: float, *, full_only: bool = False) -> ResupplyPoint | None:
         candidates = self.full_resupplies() if full_only else self._points
         for point in candidates:
             if point.mile > mile:
@@ -163,10 +157,7 @@ class TownIndex:
             raise ResupplyInfeasible(
                 "need at least two stops to measure a gap", count=len(candidates)
             )
-        return max(
-            second.mile - first.mile
-            for first, second in zip(candidates, candidates[1:], strict=False)
-        )
+        return max(second.mile - first.mile for first, second in itertools.pairwise(candidates))
 
     def __repr__(self) -> str:
         return f"TownIndex({len(self._points)} points, {len(self.full_resupplies())} full)"

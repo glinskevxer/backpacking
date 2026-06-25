@@ -85,9 +85,7 @@ class TestPlanResupply:
         assert plan.stops == ()
         assert len(plan.carries) == 1
 
-    def test_a_tight_carry_limit_forces_a_stop(
-        self, towns: TownIndex, hiker: HikerProfile
-    ) -> None:
+    def test_a_tight_carry_limit_forces_a_stop(self, towns: TownIndex, hiker: HikerProfile) -> None:
         plan = plan_resupply(towns, 0.0, 78.0, hiker, max_carry_days=3.0)
         assert len(plan.stops) >= 1
         assert plan.longest_carry.days <= 3.0
@@ -98,9 +96,7 @@ class TestPlanResupply:
         plan = plan_resupply(towns, 0.0, 78.0, hiker, max_carry_days=2.0)
         assert all(stop.supports_full_resupply for stop in plan.stops)
 
-    def test_the_carries_tile_the_whole_route(
-        self, towns: TownIndex, hiker: HikerProfile
-    ) -> None:
+    def test_the_carries_tile_the_whole_route(self, towns: TownIndex, hiker: HikerProfile) -> None:
         plan = plan_resupply(towns, 0.0, 78.0, hiker, max_carry_days=2.5)
         assert plan.carries[0].start_mile == pytest.approx(0.0)
         assert plan.carries[-1].end_mile == pytest.approx(78.0)
@@ -123,23 +119,17 @@ class TestPlanResupply:
             groceries=ServiceLevel.FULL_GROCERY,
             hitch=Distance.miles(45.0),
         )
-        easy = ResupplyPoint(
-            id="easy", name="Easy", mile=40.0, groceries=ServiceLevel.FULL_GROCERY
-        )
+        easy = ResupplyPoint(id="easy", name="Easy", mile=40.0, groceries=ServiceLevel.FULL_GROCERY)
         index = TownIndex([awkward, easy])
         plan = plan_resupply(index, 0.0, 78.0, hiker, max_carry_days=3.0)
         assert [stop.id for stop in plan.stops] == ["easy"]
 
-    def test_an_impossible_limit_is_reported(
-        self, towns: TownIndex, hiker: HikerProfile
-    ) -> None:
+    def test_an_impossible_limit_is_reported(self, towns: TownIndex, hiker: HikerProfile) -> None:
         with pytest.raises(ResupplyInfeasible, match="no admissible set of stops") as caught:
             plan_resupply(towns, 0.0, 78.0, hiker, max_carry_days=0.6)
         assert caught.value.context["longest_unavoidable_gap"] > 0.0
 
-    def test_a_backwards_route_is_refused(
-        self, towns: TownIndex, hiker: HikerProfile
-    ) -> None:
+    def test_a_backwards_route_is_refused(self, towns: TownIndex, hiker: HikerProfile) -> None:
         with pytest.raises(ResupplyInfeasible, match="must advance"):
             plan_resupply(towns, 60.0, 20.0, hiker)
 
@@ -156,9 +146,7 @@ class TestPlanResupply:
         )
         assert {stop.id for stop in plan.stops} <= {"tahoma"}
 
-    def test_the_heaviest_food_bag_is_reported(
-        self, towns: TownIndex, hiker: HikerProfile
-    ) -> None:
+    def test_the_heaviest_food_bag_is_reported(self, towns: TownIndex, hiker: HikerProfile) -> None:
         plan = plan_resupply(towns, 0.0, 78.0, hiker, max_carry_days=3.0)
         assert plan.heaviest_food_bag.in_pounds > 2.0
 

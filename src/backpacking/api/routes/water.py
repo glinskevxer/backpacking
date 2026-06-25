@@ -62,9 +62,7 @@ def dry_stretches(
     for stretch in find_dry_stretches(
         corridor, table, month, threshold=threshold, min_length_miles=min_length_miles
     ):
-        carry = plan_carry(
-            corridor, estimator, stretch, capacity, temperature_c=temperature_c
-        )
+        carry = plan_carry(corridor, estimator, stretch, capacity, temperature_c=temperature_c)
         out.append(
             WaterGapOut(
                 start_mile=round(stretch.start_mile, 2),

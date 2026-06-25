@@ -52,15 +52,11 @@ class TestShoppingLine:
             ShoppingLine(item=CATALOGUE[0], quantity=0)
 
     def test_an_item_without_volume_has_no_total(self) -> None:
-        plain = FoodItem(
-            id="p", name="P", mass=Mass.ounces(1.0), energy=Energy.kilocalories(100.0)
-        )
+        plain = FoodItem(id="p", name="P", mass=Mass.ounces(1.0), energy=Energy.kilocalories(100.0))
         assert ShoppingLine(item=plain, quantity=2).total_volume is None
 
     def test_repr(self) -> None:
-        assert repr(ShoppingLine(item=CATALOGUE[0], quantity=2)) == (
-            "ShoppingLine('olive-oil' x2)"
-        )
+        assert repr(ShoppingLine(item=CATALOGUE[0], quantity=2)) == ("ShoppingLine('olive-oil' x2)")
 
 
 class TestBuildShoppingList:
@@ -95,12 +91,8 @@ class TestBuildShoppingList:
         )
 
     def test_a_longer_carry_buys_more(self) -> None:
-        short = build_shopping_list(
-            plan_rations(2.0, Energy.kilocalories(2900.0)), CATALOGUE
-        )
-        long = build_shopping_list(
-            plan_rations(6.0, Energy.kilocalories(2900.0)), CATALOGUE
-        )
+        short = build_shopping_list(plan_rations(2.0, Energy.kilocalories(2900.0)), CATALOGUE)
+        long = build_shopping_list(plan_rations(6.0, Energy.kilocalories(2900.0)), CATALOGUE)
         assert long.item_count() > short.item_count()
 
     def test_the_total_volume_is_reported(self, rations) -> None:

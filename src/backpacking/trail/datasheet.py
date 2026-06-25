@@ -93,16 +93,12 @@ def _parse_row(raw: dict[str, str], line_number: int) -> DatasheetRow:
     try:
         kind = WaypointKind(kind_text) if kind_text else WaypointKind.LANDMARK
     except ValueError as exc:
-        raise DataSourceError(
-            "unknown waypoint kind", line=line_number, kind=kind_text
-        ) from exc
+        raise DataSourceError("unknown waypoint kind", line=line_number, kind=kind_text) from exc
     surface_text = raw.get("surface", "").lower()
     try:
         surface = Surface(surface_text) if surface_text else Surface.TREAD
     except ValueError as exc:
-        raise DataSourceError(
-            "unknown surface", line=line_number, surface=surface_text
-        ) from exc
+        raise DataSourceError("unknown surface", line=line_number, surface=surface_text) from exc
     tags = frozenset(t.strip() for t in raw.get("tags", "").split("|") if t.strip())
     extra = {k: v for k, v in raw.items() if k not in KNOWN_COLUMNS and v}
     return DatasheetRow(

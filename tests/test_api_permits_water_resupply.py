@@ -66,9 +66,7 @@ class TestPermitCheck:
 
     def test_carrying_a_canister_clears_that_rule(self, api: TestClient) -> None:
         plan_id = api.post("/plans/save", json=BODY).json()["plan_id"]
-        body = api.get(
-            f"/permits/check/{plan_id}?corridor=crystal-range&has_canister=true"
-        ).json()
+        body = api.get(f"/permits/check/{plan_id}?corridor=crystal-range&has_canister=true").json()
         assert not any(f["rule"] == "bear_canister" for f in body["violations"])
 
     def test_the_report_names_the_zones_visited(self, api: TestClient) -> None:

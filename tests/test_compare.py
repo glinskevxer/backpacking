@@ -58,9 +58,7 @@ class TestCompareIdentical:
 
 
 class TestCompareDifferent:
-    def test_a_gentler_plan_takes_more_days(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_a_gentler_plan_takes_more_days(self, baseline: Itinerary, gentle: Itinerary) -> None:
         delta = compare_plans(baseline, gentle)
         assert delta.day_count_delta > 0
         assert not delta.is_shorter_trip
@@ -74,9 +72,7 @@ class TestCompareDifferent:
     def test_the_average_day_falls(self, baseline: Itinerary, gentle: Itinerary) -> None:
         assert compare_plans(baseline, gentle).average_daily_delta < 0.0
 
-    def test_the_added_days_are_reported(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_the_added_days_are_reported(self, baseline: Itinerary, gentle: Itinerary) -> None:
         delta = compare_plans(baseline, gentle)
         added = [day for day in delta.days if day.is_added]
         assert len(added) == delta.day_count_delta
@@ -88,9 +84,7 @@ class TestCompareDifferent:
         removed = [day for day in delta.days if day.is_removed]
         assert len(removed) == -delta.day_count_delta
 
-    def test_a_camp_change_is_detected(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_a_camp_change_is_detected(self, baseline: Itinerary, gentle: Itinerary) -> None:
         delta = compare_plans(baseline, gentle)
         assert any(day.camp_changed for day in delta.changed_days)
 
@@ -112,16 +106,12 @@ class TestCompareDifferent:
 
 
 class TestDayDelta:
-    def test_the_repr_of_an_added_day(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_the_repr_of_an_added_day(self, baseline: Itinerary, gentle: Itinerary) -> None:
         delta = compare_plans(baseline, gentle)
         added = next(day for day in delta.days if day.is_added)
         assert repr(added) == f"DayDelta({added.index}: added)"
 
-    def test_the_repr_of_a_changed_day(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_the_repr_of_a_changed_day(self, baseline: Itinerary, gentle: Itinerary) -> None:
         delta = compare_plans(baseline, gentle)
         changed = next(
             day for day in delta.days if not day.is_added and abs(day.miles_delta) > 0.05
@@ -133,9 +123,7 @@ class TestDayDelta:
 
 
 class TestRenderDelta:
-    def test_every_headline_is_present(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_every_headline_is_present(self, baseline: Itinerary, gentle: Itinerary) -> None:
         text = render_delta(compare_plans(baseline, gentle))
         for label in ("days", "distance", "climb", "time on feet", "average day", "rest days"):
             assert label in text
@@ -148,9 +136,7 @@ class TestRenderDelta:
         text = render_delta(compare_plans(baseline, gentle))
         assert "day changed:" in text or "days changed:" in text
 
-    def test_a_camp_change_is_called_out(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_a_camp_change_is_called_out(self, baseline: Itinerary, gentle: Itinerary) -> None:
         text = render_delta(compare_plans(baseline, gentle))
         assert "camps elsewhere" in text
 
@@ -159,14 +145,10 @@ class TestRenderDelta:
 
 
 class TestRankPlans:
-    def test_fewer_days_wins_by_default(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_fewer_days_wins_by_default(self, baseline: Itinerary, gentle: Itinerary) -> None:
         assert rank_plans([gentle, baseline])[0] is baseline
 
-    def test_the_preference_can_be_flipped(
-        self, baseline: Itinerary, gentle: Itinerary
-    ) -> None:
+    def test_the_preference_can_be_flipped(self, baseline: Itinerary, gentle: Itinerary) -> None:
         assert rank_plans([baseline, gentle], prefer_fewer_days=False)[0] is gentle
 
     def test_a_tie_is_broken_by_the_longest_day(

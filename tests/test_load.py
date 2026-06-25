@@ -79,7 +79,9 @@ class TestCombinedFactor:
         assert combined_factor(hiker, carried, Surface.TALUS, 10500.0) == pytest.approx(expected)
 
     def test_neutral_conditions_give_one(self, hiker: HikerProfile) -> None:
-        assert combined_factor(hiker, Mass.pounds(26.0), Surface.TREAD, 6000.0) == pytest.approx(1.0)
+        assert combined_factor(hiker, Mass.pounds(26.0), Surface.TREAD, 6000.0) == pytest.approx(
+            1.0
+        )
 
 
 class TestPandolf:
@@ -144,7 +146,9 @@ class TestEnergyCost:
         assert long.in_kilocalories == pytest.approx(short.in_kilocalories * 3.0)
 
     def test_zero_hours_costs_nothing(self) -> None:
-        assert energy_cost(self.BODY, Mass.kilograms(13.0), 1.1, 3.0, hours=0.0).in_kilocalories == 0.0
+        assert (
+            energy_cost(self.BODY, Mass.kilograms(13.0), 1.1, 3.0, hours=0.0).in_kilocalories == 0.0
+        )
 
     def test_negative_hours_are_refused(self) -> None:
         with pytest.raises(PaceModelError, match="hours must not be negative"):

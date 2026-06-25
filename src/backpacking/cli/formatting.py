@@ -17,9 +17,7 @@ def table(headers: Sequence[str], rows: Sequence[Sequence[object]]) -> str:
     cells = [[str(value) for value in row] for row in rows]
     for row in cells:
         if len(row) != len(headers):
-            raise ValueError(
-                f"row has {len(row)} cells but there are {len(headers)} columns"
-            )
+            raise ValueError(f"row has {len(row)} cells but there are {len(headers)} columns")
     widths = [len(header) for header in headers]
     for row in cells:
         for index, value in enumerate(row):

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from tests.conftest import wp
 
 from backpacking.errors import CorridorError, WaypointNotFound
 from backpacking.trail.corridor import Corridor, merge_corridors
 from backpacking.trail.models import Segment, Surface, WaypointKind
 from backpacking.units import Distance
-from tests.conftest import wp
 
 
 class TestConstruction:
@@ -231,12 +231,8 @@ class TestSlicing:
 
 class TestMerge:
     def test_merging_reanchors_the_second_part(self) -> None:
-        first = Corridor.from_waypoints(
-            "First", [wp("a", "A", 0.0, 100), wp("b", "B", 5.0, 400)]
-        )
-        second = Corridor.from_waypoints(
-            "Second", [wp("b", "B", 0.0, 400), wp("c", "C", 7.0, 900)]
-        )
+        first = Corridor.from_waypoints("First", [wp("a", "A", 0.0, 100), wp("b", "B", 5.0, 400)])
+        second = Corridor.from_waypoints("Second", [wp("b", "B", 0.0, 400), wp("c", "C", 7.0, 900)])
         joined = merge_corridors("Joined", [first, second])
         assert [w.id for w in joined] == ["a", "b", "c"]
         assert joined.waypoint("c").mile == pytest.approx(12.0)

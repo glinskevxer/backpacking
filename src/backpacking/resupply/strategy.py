@@ -16,6 +16,7 @@ hours.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -91,9 +92,7 @@ def carry_between(
     if daily_miles <= 0.0:
         raise ResupplyInfeasible("daily mileage must be positive", daily_miles=daily_miles)
     if end_mile < start_mile:
-        raise ResupplyInfeasible(
-            "a carry must advance", start_mile=start_mile, end_mile=end_mile
-        )
+        raise ResupplyInfeasible("a carry must advance", start_mile=start_mile, end_mile=end_mile)
     days = max(0.5, (end_mile - start_mile) / daily_miles)
     rations = plan_rations(days, burned_per_day, density_kcal_per_oz=density_kcal_per_oz)
     return Carry(
@@ -146,9 +145,7 @@ def plan_resupply(
 ) -> ResupplyStrategy:
     """Cheapest admissible set of stops, by dynamic programming along the corridor."""
     if end_mile <= start_mile:
-        raise ResupplyInfeasible(
-            "the route must advance", start_mile=start_mile, end_mile=end_mile
-        )
+        raise ResupplyInfeasible("the route must advance", start_mile=start_mile, end_mile=end_mile)
     usable = [
         point
         for point in (candidates if candidates is not None else towns.full_resupplies())
@@ -204,7 +201,7 @@ def plan_resupply(
 
     carries: list[Carry] = []
     stops: list[ResupplyPoint] = []
-    for source, target in zip(path, path[1:], strict=False):
+    for source, target in itertools.pairwise(path):
         source_mile, source_point = nodes[source]
         target_mile, target_point = nodes[target]
         carries.append(
@@ -220,15 +217,11 @@ def plan_resupply(
         if target_point is not None:
             stops.append(target_point)
 
-    return ResupplyStrategy(
-        stops=tuple(stops), carries=tuple(carries), cost_hours=best[-1]
-    )
+    return ResupplyStrategy(stops=tuple(stops), carries=tuple(carries), cost_hours=best[-1])
 
 
 def _longest_gap(nodes: Sequence[tuple[float, ResupplyPoint | None]]) -> float:
-    return max(
-        second[0] - first[0] for first, second in zip(nodes, nodes[1:], strict=False)
-    )
+    return max(second[0] - first[0] for first, second in itertools.pairwise(nodes))
 
 
 def town_time(strategy: ResupplyStrategy) -> Duration:

@@ -118,7 +118,7 @@ class WaterSource:
 class WaterTable:
     """Every source on a corridor, indexed by mile."""
 
-    __slots__ = ("_sources", "_index")
+    __slots__ = ("_index", "_sources")
 
     def __init__(self, sources: Sequence[WaterSource]) -> None:
         ordered = sorted(sources, key=lambda s: s.mile)
@@ -154,15 +154,9 @@ class WaterTable:
     def between(
         self, start_mile: float, end_mile: float, month: int, threshold: float = 0.6
     ) -> tuple[WaterSource, ...]:
-        return tuple(
-            s
-            for s in self.usable(month, threshold)
-            if start_mile <= s.mile <= end_mile
-        )
+        return tuple(s for s in self.usable(month, threshold) if start_mile <= s.mile <= end_mile)
 
-    def next_usable(
-        self, mile: float, month: int, threshold: float = 0.6
-    ) -> WaterSource | None:
+    def next_usable(self, mile: float, month: int, threshold: float = 0.6) -> WaterSource | None:
         for source in self.usable(month, threshold):
             if source.mile > mile:
                 return source
@@ -191,7 +185,10 @@ class WaterTable:
     def __repr__(self) -> str:
         if self._index is None:
             return "WaterTable(empty)"
-        return f"WaterTable({len(self._sources)} sources, {self._index.first:.1f}-{self._index.last:.1f} mi)"
+        return (
+            f"WaterTable({len(self._sources)} sources, "
+            f"{self._index.first:.1f}-{self._index.last:.1f} mi)"
+        )
 
 
 def _dedupe_ascending(miles: list[float]) -> list[float]:

@@ -75,9 +75,7 @@ class TestConfiguration:
         assert "loud" in out
         assert "quiet" not in out
 
-    def test_credentials_are_redacted_end_to_end(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_credentials_are_redacted_end_to_end(self, capsys: pytest.CaptureFixture[str]) -> None:
         configure_logging(Settings(log_json=True), force=True)
         get_logger("test").info("login", token="abcd1234")
         parsed = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
@@ -116,9 +114,7 @@ class TestContextVars:
         bind_request("req-123", path="/x")
         unbind("path")
         parsed = json.loads(
-            (get_logger("test").info("after"), capsys.readouterr().out)[1]
-            .strip()
-            .splitlines()[-1]
+            (get_logger("test").info("after"), capsys.readouterr().out)[1].strip().splitlines()[-1]
         )
         assert parsed["request_id"] == "req-123"
         assert "path" not in parsed

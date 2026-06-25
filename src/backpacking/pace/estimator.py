@@ -83,9 +83,7 @@ class PaceEstimator:
     ) -> LegEstimate:
         """Estimate one corridor segment end to end."""
         load = carried if carried is not None else self.profile.reference_load
-        mean_elevation_ft = (
-            segment.start.elevation.in_feet + segment.end.elevation.in_feet
-        ) / 2.0
+        mean_elevation_ft = (segment.start.elevation.in_feet + segment.end.elevation.in_feet) / 2.0
         moving = self._adjusted_time(
             distance=segment.length,
             gain=segment.gain,
@@ -115,9 +113,7 @@ class PaceEstimator:
     ) -> LegEstimate:
         """Estimate an arbitrary stretch, prorating the segments at either end."""
         if end_mile < start_mile:
-            raise PaceModelError(
-                "span must advance", start_mile=start_mile, end_mile=end_mile
-            )
+            raise PaceModelError("span must advance", start_mile=start_mile, end_mile=end_mile)
         if end_mile == start_mile:
             return LegEstimate.empty()
         load = carried if carried is not None else self.profile.reference_load
@@ -173,9 +169,7 @@ class PaceEstimator:
             return start_mile
         low = start_mile
         high = corridor.end_mile
-        whole = self.estimate_span(
-            corridor, start_mile, high, carried=carried, state=state
-        )
+        whole = self.estimate_span(corridor, start_mile, high, carried=carried, state=state)
         if whole.moving_time <= budget:
             return high
         while high - low > tolerance_miles:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from tests.conftest import wp
 
 from backpacking.errors import RouteResolutionError
 from backpacking.trail.alternates import (
@@ -13,7 +14,6 @@ from backpacking.trail.alternates import (
 )
 from backpacking.trail.corridor import Corridor
 from backpacking.trail.models import WaypointKind
-from tests.conftest import wp
 
 # Replaces the 11.9 to 18.0 stretch with a 9.4 mile high route: 3.3 miles longer.
 HIGH_ROUTE = Alternate(
@@ -210,9 +210,7 @@ class TestResolveRoute:
             length_miles=7.0,
         )
         with pytest.raises(RouteResolutionError, match="overlap on the corridor"):
-            resolve_route(
-                corridor, [HIGH_ROUTE, overlapping], ["crystal-high-route", "overlap"]
-            )
+            resolve_route(corridor, [HIGH_ROUTE, overlapping], ["crystal-high-route", "overlap"])
 
     def test_abutting_alternates_are_allowed(self, corridor: Corridor) -> None:
         second = Alternate(

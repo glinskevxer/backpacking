@@ -136,7 +136,9 @@ class TestFordHazard:
 
     def test_the_hazard_stays_within_zero_and_one(self) -> None:
         for offset in range(-60, 120, 5):
-            value = ford_hazard(HEAVY, melt_peak_date(HEAVY) + timedelta(days=offset), Distance.feet(9000))
+            value = ford_hazard(
+                HEAVY, melt_peak_date(HEAVY) + timedelta(days=offset), Distance.feet(9000)
+            )
             assert 0.0 <= value <= 1.0
 
     def test_a_low_drainage_is_less_hazardous(self) -> None:
@@ -151,16 +153,19 @@ class TestFordHazard:
 
     @pytest.mark.parametrize(
         ("value", "word"),
-        [(0.9, "dangerous"), (0.6, "serious"), (0.3, "wet but manageable"), (0.1, "straightforward")],
+        [
+            (0.9, "dangerous"),
+            (0.6, "serious"),
+            (0.3, "wet but manageable"),
+            (0.1, "straightforward"),
+        ],
     )
     def test_the_descriptions(self, value: float, word: str) -> None:
         assert describe_hazard(value) == word
 
 
 class TestCorridorConditions:
-    def test_high_points_are_snowbound_early_in_a_heavy_year(
-        self, corridor: Corridor
-    ) -> None:
+    def test_high_points_are_snowbound_early_in_a_heavy_year(self, corridor: Corridor) -> None:
         bound = snowbound_waypoints(corridor, HEAVY, date(2025, 6, 15))
         assert {w.id for w in bound} >= {"granite-chief", "mosquito-pass"}
 
@@ -181,9 +186,7 @@ class TestCorridorConditions:
         assert (padded - plain).days == 7
 
     def test_a_heavy_year_needs_a_later_start(self, corridor: Corridor) -> None:
-        assert earliest_walkable_start(corridor, HEAVY) > earliest_walkable_start(
-            corridor, MEDIAN
-        )
+        assert earliest_walkable_start(corridor, HEAVY) > earliest_walkable_start(corridor, MEDIAN)
 
     def test_a_corridor_with_no_high_points_is_refused(self, short_corridor: Corridor) -> None:
         with pytest.raises(SeasonError, match="no passes or summits"):
@@ -193,9 +196,7 @@ class TestCorridorConditions:
 class TestItineraryConditions:
     @pytest.fixture
     def plan(self, corridor: Corridor, hiker: HikerProfile) -> Itinerary:
-        return solve(
-            PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 7, 20))
-        )
+        return solve(PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 7, 20)))
 
     def test_a_july_plan_in_a_heavy_year_has_findings(self, plan: Itinerary) -> None:
         findings = check_itinerary(plan, HEAVY)
@@ -208,16 +209,12 @@ class TestItineraryConditions:
 
     def test_serious_findings_come_back_worst_first(self, plan: Itinerary) -> None:
         serious = serious_findings(check_itinerary(plan, HEAVY))
-        assert [f.severity for f in serious] == sorted(
-            [f.severity for f in serious], reverse=True
-        )
+        assert [f.severity for f in serious] == sorted([f.severity for f in serious], reverse=True)
 
     def test_a_light_year_in_september_is_clean(
         self, corridor: Corridor, hiker: HikerProfile
     ) -> None:
-        late = solve(
-            PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 9, 10))
-        )
+        late = solve(PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 9, 10)))
         assert serious_findings(check_itinerary(late, LIGHT)) == ()
 
     def test_a_delay_is_suggested_for_a_heavy_year(self, plan: Itinerary) -> None:
@@ -229,9 +226,7 @@ class TestItineraryConditions:
     def test_no_delay_is_needed_when_there_is_nothing_serious(
         self, corridor: Corridor, hiker: HikerProfile
     ) -> None:
-        late = solve(
-            PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 9, 10))
-        )
+        late = solve(PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 9, 10)))
         assert suggested_delay(late, LIGHT) == 0
 
     def test_the_summary_says_so_when_there_is_nothing_at_all(self) -> None:
@@ -240,9 +235,7 @@ class TestItineraryConditions:
     def test_a_quiet_season_only_leaves_notes(
         self, corridor: Corridor, hiker: HikerProfile
     ) -> None:
-        late = solve(
-            PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 9, 10))
-        )
+        late = solve(PlanRequest(corridor=corridor, profile=hiker, start_date=date(2025, 9, 10)))
         findings = check_itinerary(late, LIGHT)
         assert serious_findings(findings) == ()
         assert summarise(findings) == "1 further note"

@@ -12,7 +12,9 @@ from backpacking.permits.quota import EntryPoint, QuotaCalendar, QuotaWindow
 
 class TestQuotaWindow:
     def test_the_advance_limit_excludes_the_walk_up_hold_back(self) -> None:
-        window = QuotaWindow(date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4)
+        window = QuotaWindow(
+            date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4
+        )
         assert window.advance_limit == 8
 
     def test_a_window_with_no_hold_back_gives_everything_in_advance(self) -> None:
@@ -38,7 +40,9 @@ class TestQuotaWindow:
             QuotaWindow(date(2025, 6, 1), date(2025, 6, 30), daily_limit=5, walk_up_reserved=9)
 
     def test_repr(self) -> None:
-        window = QuotaWindow(date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4)
+        window = QuotaWindow(
+            date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4
+        )
         assert repr(window) == "QuotaWindow(2025-06-15..2025-09-15, 8/12)"
 
 
@@ -88,7 +92,10 @@ class TestEntryPoint:
         assert entry.advance_capacity(date(2025, 7, 15)) == 9
 
     def test_repr(self, quota: QuotaCalendar) -> None:
-        assert repr(quota.entry("echo-trailhead")) == "EntryPoint('echo-trailhead' @ 0.0 mi, 1 windows)"
+        assert (
+            repr(quota.entry("echo-trailhead"))
+            == "EntryPoint('echo-trailhead' @ 0.0 mi, 1 windows)"
+        )
 
 
 class TestQuotaCalendar:
@@ -124,9 +131,8 @@ class TestQuotaCalendar:
         assert quota.remaining("echo-trailhead", date(2025, 7, 20)) == 8
 
     def test_reservations_accumulate(self, quota: QuotaCalendar) -> None:
-        after = (
-            quota.reserve("echo-trailhead", date(2025, 7, 20), 3)
-            .reserve("echo-trailhead", date(2025, 7, 20), 4)
+        after = quota.reserve("echo-trailhead", date(2025, 7, 20), 3).reserve(
+            "echo-trailhead", date(2025, 7, 20), 4
         )
         assert after.remaining("echo-trailhead", date(2025, 7, 20)) == 1
 
@@ -164,14 +170,10 @@ class TestSearching:
     def test_first_available_steps_past_a_closure(self, quota: QuotaCalendar) -> None:
         assert quota.first_available("echo-trailhead", date(2025, 7, 4)) == date(2025, 7, 5)
 
-    def test_first_available_gives_up_after_the_search_window(
-        self, quota: QuotaCalendar
-    ) -> None:
+    def test_first_available_gives_up_after_the_search_window(self, quota: QuotaCalendar) -> None:
         blocked = quota
         for offset in range(5):
-            blocked = blocked.reserve(
-                "echo-trailhead", date(2025, 7, 20 + offset), 8
-            )
+            blocked = blocked.reserve("echo-trailhead", date(2025, 7, 20 + offset), 8)
         assert blocked.first_available("echo-trailhead", date(2025, 7, 20), search_days=3) is None
 
     def test_a_zero_search_window_is_refused(self, quota: QuotaCalendar) -> None:

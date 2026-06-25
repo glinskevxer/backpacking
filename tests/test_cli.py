@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 
 from backpacking.cli.formatting import keyed, miles, plural, table
 from backpacking.cli.main import app
+from backpacking.config import Settings
 from backpacking.storage.repository import (
     CorridorRepository,
     PermitRepository,
@@ -16,7 +17,6 @@ from backpacking.storage.repository import (
     WaterRepository,
 )
 from backpacking.storage.session import Database
-from backpacking.config import Settings
 from backpacking.trail.datasheet import corridor_to_rows, write_datasheet
 
 
@@ -128,9 +128,7 @@ class TestCorridorCommands:
         assert result.exit_code == 0
         assert "grade band" in result.output
 
-    def test_import_reads_a_datasheet(
-        self, runner: CliRunner, tmp_path, corridor
-    ) -> None:
+    def test_import_reads_a_datasheet(self, runner: CliRunner, tmp_path, corridor) -> None:
         url = f"sqlite+pysqlite:///{tmp_path / 'import.sqlite3'}"
         run(runner, url, "init")
         sheet = tmp_path / "sheet.csv"
@@ -139,9 +137,7 @@ class TestCorridorCommands:
         assert result.exit_code == 0
         assert "stored imported: 20 waypoints" in result.output
 
-    def test_export_writes_a_datasheet(
-        self, runner: CliRunner, cli_db: str, tmp_path
-    ) -> None:
+    def test_export_writes_a_datasheet(self, runner: CliRunner, cli_db: str, tmp_path) -> None:
         out = tmp_path / "out.csv"
         result = run(runner, cli_db, "corridor", "export", "crystal-range", "-o", str(out))
         assert result.exit_code == 0
@@ -178,12 +174,26 @@ class TestPlanCommands:
 
     def test_a_tighter_pace_makes_more_days(self, runner: CliRunner, cli_db: str) -> None:
         slow = run(
-            runner, cli_db, "plan", "build", "crystal-range", "--start", "2025-07-20",
-            "--pace", "2.0",
+            runner,
+            cli_db,
+            "plan",
+            "build",
+            "crystal-range",
+            "--start",
+            "2025-07-20",
+            "--pace",
+            "2.0",
         )
         fast = run(
-            runner, cli_db, "plan", "build", "crystal-range", "--start", "2025-07-20",
-            "--pace", "3.8",
+            runner,
+            cli_db,
+            "plan",
+            "build",
+            "crystal-range",
+            "--start",
+            "2025-07-20",
+            "--pace",
+            "3.8",
         )
         assert len(slow.output.splitlines()) >= len(fast.output.splitlines())
 
@@ -214,9 +224,7 @@ class TestPlanCommands:
         assert "blocking:" in result.output
         assert "try:" in result.output
 
-    def test_check_with_a_canister_clears_that_rule(
-        self, runner: CliRunner, cli_db: str
-    ) -> None:
+    def test_check_with_a_canister_clears_that_rule(self, runner: CliRunner, cli_db: str) -> None:
         run(runner, cli_db, "plan", "build", "crystal-range", "--start", "2025-07-20", "--save")
         result = run(
             runner, cli_db, "plan", "check", "1", "--corridor", "crystal-range", "--canister"
@@ -245,9 +253,7 @@ class TestTrailCommands:
     def test_water_gaps_with_a_huge_minimum_finds_nothing(
         self, runner: CliRunner, cli_db: str
     ) -> None:
-        result = run(
-            runner, cli_db, "water", "gaps", "crystal-range", "--min-miles", "200"
-        )
+        result = run(runner, cli_db, "water", "gaps", "crystal-range", "--min-miles", "200")
         assert "no dry stretches" in result.output
 
     def test_permit_list(self, runner: CliRunner, cli_db: str) -> None:
@@ -275,17 +281,22 @@ class TestTrailCommands:
         assert "alpine-store" not in result.output
 
     def test_resupply_strategy(self, runner: CliRunner, cli_db: str) -> None:
-        result = run(
-            runner, cli_db, "resupply", "strategy", "crystal-range", "--max-carry", "3"
-        )
+        result = run(runner, cli_db, "resupply", "strategy", "crystal-range", "--max-carry", "3")
         assert result.exit_code == 0
         assert "longest carry" in result.output
 
     def test_resupply_export(self, runner: CliRunner, cli_db: str, tmp_path) -> None:
         out = tmp_path / "carries.csv"
         result = run(
-            runner, cli_db, "resupply", "export", "crystal-range", "-o", str(out),
-            "--max-carry", "3",
+            runner,
+            cli_db,
+            "resupply",
+            "export",
+            "crystal-range",
+            "-o",
+            str(out),
+            "--max-carry",
+            "3",
         )
         assert result.exit_code == 0
         assert out.read_text(encoding="utf-8").startswith("start_mile,end_mile")

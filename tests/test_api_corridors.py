@@ -46,9 +46,7 @@ class TestListCorridors:
 
 
 class TestGetCorridor:
-    def test_the_full_corridor_includes_waypoints_and_segments(
-        self, client: TestClient
-    ) -> None:
+    def test_the_full_corridor_includes_waypoints_and_segments(self, client: TestClient) -> None:
         body = client.get("/corridors/crystal-range").json()
         assert len(body["waypoints"]) == 20
         assert len(body["segments"]) == 19

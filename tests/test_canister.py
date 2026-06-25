@@ -56,9 +56,7 @@ class TestCanister:
         assert repr(Canister.named("bv450")) == "Canister('bv450', 440 cu in)"
 
     def test_a_canister_can_be_built_by_hand(self) -> None:
-        custom = Canister(
-            model="ursack", volume=Volume.cubic_inches(650.0), mass=Mass.ounces(13.0)
-        )
+        custom = Canister(model="ursack", volume=Volume.cubic_inches(650.0), mass=Mass.ounces(13.0))
         assert custom.usable_volume.in_cubic_inches == pytest.approx(572.0)
 
 

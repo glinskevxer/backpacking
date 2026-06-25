@@ -15,6 +15,7 @@ rest of the trail.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
@@ -80,7 +81,10 @@ class Alternate:
         return tag in self.tags
 
     def __repr__(self) -> str:
-        return f"Alternate({self.id!r}, {self.departs_at} -> {self.rejoins_at}, {self.length_miles:.1f} mi)"
+        return (
+            f"Alternate({self.id!r}, {self.departs_at} -> {self.rejoins_at}, "
+            f"{self.length_miles:.1f} mi)"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,7 +136,7 @@ def resolve_route(
         wanted.append(by_id[identifier])
     spans = [(*bypassed_span(corridor, alternate), alternate) for alternate in wanted]
     spans.sort(key=lambda item: item[0])
-    for (_, first_end, first), (second_start, _, second) in zip(spans, spans[1:], strict=False):
+    for (_, first_end, first), (second_start, _, second) in itertools.pairwise(spans):
         if second_start < first_end:
             raise RouteResolutionError(
                 "chosen alternates overlap on the corridor",
@@ -186,7 +190,7 @@ def _rebuild(corridor: Corridor, waypoints: list[Waypoint]) -> Corridor:
     """
     original = {(s.start.id, s.end.id): s for s in corridor.segments}
     segments: list[Segment] = []
-    for start, end in zip(waypoints, waypoints[1:], strict=False):
+    for start, end in itertools.pairwise(waypoints):
         known = original.get((start.id, end.id))
         if known is not None:
             segments.append(

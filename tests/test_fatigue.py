@@ -137,9 +137,7 @@ class TestProject:
         states = project(hiker, [11.0] * 10, zero_days={6})
         assert states[5].fatigue < states[4].fatigue
 
-    def test_taking_a_zero_leaves_the_hiker_fresher_at_the_end(
-        self, hiker: HikerProfile
-    ) -> None:
+    def test_taking_a_zero_leaves_the_hiker_fresher_at_the_end(self, hiker: HikerProfile) -> None:
         without = project(hiker, [11.0] * 4)
         with_rest = project(hiker, [11.0] * 4, zero_days={3})
         assert with_rest[-1].fatigue < without[-1].fatigue

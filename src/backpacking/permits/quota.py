@@ -13,6 +13,7 @@ made in advance.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import date, timedelta
@@ -77,7 +78,7 @@ class EntryPoint:
 
     def __post_init__(self) -> None:
         ordered = sorted(self.windows, key=lambda w: w.start)
-        for left, right in zip(ordered, ordered[1:], strict=False):
+        for left, right in itertools.pairwise(ordered):
             if right.start <= left.end:
                 raise PermitError(
                     "quota windows overlap",
@@ -189,9 +190,7 @@ class QuotaCalendar:
                 return candidate
         return None
 
-    def availability(
-        self, entry_id: str, start: date, days: int
-    ) -> dict[date, int | None]:
+    def availability(self, entry_id: str, start: date, days: int) -> dict[date, int | None]:
         """Remaining permits for each of ``days`` dates from ``start``."""
         if days < 1:
             raise PermitError("availability window must be at least one day", days=days)

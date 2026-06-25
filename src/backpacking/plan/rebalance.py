@@ -160,7 +160,7 @@ def add_town_day(itinerary: Itinerary, after: int, *, note: str = "town day") ->
     )
 
 
-def compress_to_deadline(itinerary: Itinerary, latest_finish: "object") -> Itinerary:
+def compress_to_deadline(itinerary: Itinerary, latest_finish: object) -> Itinerary:
     """Drop rest days, latest first, until the plan meets a finish date."""
     from datetime import date as date_type
 

@@ -148,9 +148,7 @@ def is_snowbound(
     return elevation > snow_line(snow_year, when, aspect)
 
 
-def melt_out_date(
-    snow_year: SnowYear, elevation: Distance, aspect: Aspect = Aspect.FLAT
-) -> date:
+def melt_out_date(snow_year: SnowYear, elevation: Distance, aspect: Aspect = Aspect.FLAT) -> date:
     """The date the snow line reaches an elevation, by inverting the model."""
     excess_percent = snow_year.percent_of_median - 100.0
     days_from_reference = (

@@ -10,7 +10,7 @@ a way an API response is not allowed to constrain itself to be.
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
 from backpacking.errors import DataSourceError
@@ -77,7 +77,7 @@ def plan_to_dict(
     generated_at: datetime | None = None,
 ) -> dict[str, Any]:
     """Everything about a plan, including what it was built from."""
-    stamp = generated_at or datetime.now(timezone.utc)
+    stamp = generated_at or datetime.now(UTC)
     body: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": stamp.isoformat(),

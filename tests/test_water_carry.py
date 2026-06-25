@@ -46,9 +46,7 @@ class TestFindDryStretches:
     def test_the_worst_august_gap_is_long_enough_to_matter(
         self, corridor: Corridor, water: WaterTable
     ) -> None:
-        worst = max(
-            find_dry_stretches(corridor, water, month=8), key=lambda s: s.length.in_miles
-        )
+        worst = max(find_dry_stretches(corridor, water, month=8), key=lambda s: s.length.in_miles)
         assert worst.length.in_miles > 25.0
 
     def test_a_lower_minimum_finds_more(self, corridor: Corridor, water: WaterTable) -> None:
@@ -64,9 +62,7 @@ class TestFindDryStretches:
         assert stretches[0].is_open_ended
         assert stretches[-1].end_source is None
 
-    def test_a_non_positive_minimum_is_refused(
-        self, corridor: Corridor, water: WaterTable
-    ) -> None:
+    def test_a_non_positive_minimum_is_refused(self, corridor: Corridor, water: WaterTable) -> None:
         with pytest.raises(WaterCarryError, match="must be positive"):
             find_dry_stretches(corridor, water, month=6, min_length_miles=0.0)
 
@@ -124,9 +120,7 @@ class TestWaterNeeded:
         with_camp = water_needed(corridor, estimator, 23.8, 40.1, camping_en_route=True)
         assert with_camp.in_liters == pytest.approx(dry.in_liters + CAMP_WATER_LITERS)
 
-    def test_the_reserve_is_included(
-        self, corridor: Corridor, estimator: PaceEstimator
-    ) -> None:
+    def test_the_reserve_is_included(self, corridor: Corridor, estimator: PaceEstimator) -> None:
         none = water_needed(corridor, estimator, 10.0, 15.0, reserve_liters=0.0)
         held = water_needed(corridor, estimator, 10.0, 15.0, reserve_liters=1.0)
         assert held.in_liters == pytest.approx(none.in_liters + 1.0)
@@ -223,9 +217,7 @@ class TestFurthestReachable:
         reached = furthest_reachable(corridor, estimator, 0.0, Volume.liters(200.0))
         assert reached == pytest.approx(corridor.end_mile)
 
-    def test_heat_pulls_the_reach_in(
-        self, corridor: Corridor, estimator: PaceEstimator
-    ) -> None:
+    def test_heat_pulls_the_reach_in(self, corridor: Corridor, estimator: PaceEstimator) -> None:
         mild = furthest_reachable(corridor, estimator, 0.0, Volume.liters(3.0), temperature_c=14.0)
         hot = furthest_reachable(corridor, estimator, 0.0, Volume.liters(3.0), temperature_c=36.0)
         assert hot < mild

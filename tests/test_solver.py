@@ -52,9 +52,7 @@ class TestPlanRequest:
         assert request.resolved_start() == pytest.approx(10.0)
         assert request.resolved_end() == pytest.approx(50.0)
 
-    def test_a_backwards_request_is_refused(
-        self, corridor: Corridor, hiker: HikerProfile
-    ) -> None:
+    def test_a_backwards_request_is_refused(self, corridor: Corridor, hiker: HikerProfile) -> None:
         with pytest.raises(PlanInfeasible, match="must advance"):
             request_for(corridor, hiker, start_mile=50.0, end_mile=10.0)
 
@@ -95,9 +93,7 @@ class TestSolve:
     ) -> None:
         assert 4 <= len(plan) <= 8
 
-    def test_every_day_respects_the_constraints(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_every_day_respects_the_constraints(self, plan: Itinerary, hiker: HikerProfile) -> None:
         limits = PlanConstraints()
         for day in plan.days[:-1]:
             assert limits.day_is_admissible(day.miles, day.gain, day.elapsed)
@@ -141,9 +137,7 @@ class TestSolve:
         heavy = solve(request_for(corridor, hiker, pack_weight=Mass.pounds(45.0)))
         assert heavy.average_daily_miles < light.average_daily_miles
 
-    def test_a_forbidden_camp_is_avoided(
-        self, corridor: Corridor, hiker: HikerProfile
-    ) -> None:
+    def test_a_forbidden_camp_is_avoided(self, corridor: Corridor, hiker: HikerProfile) -> None:
         limits = PlanConstraints(forbidden_camps=frozenset({"clyde-basin", "dry-bench"}))
         plan = solve(request_for(corridor, hiker, constraints=limits))
         assert "clyde-basin" not in {day.camp_id for day in plan}
@@ -169,9 +163,7 @@ class TestSolve:
         plan = solve(request_for(corridor, hiker, constraints=limits))
         assert all(day.miles <= 12.0 for day in plan.days)
 
-    def test_a_tight_gain_cap_is_respected(
-        self, corridor: Corridor, hiker: HikerProfile
-    ) -> None:
+    def test_a_tight_gain_cap_is_respected(self, corridor: Corridor, hiker: HikerProfile) -> None:
         limits = PlanConstraints(max_daily_gain=Distance.feet(1600))
         plan = solve(request_for(corridor, hiker, constraints=limits))
         assert all(day.gain.in_feet <= 1600.0 for day in plan.days[:-1])
@@ -227,8 +219,9 @@ class TestSolve:
         level failure a caller can act on rather than a pace model exception
         leaking out of the search.
         """
-        from backpacking.trail.corridor import Corridor
         from tests.conftest import wp
+
+        from backpacking.trail.corridor import Corridor
 
         cliff = Corridor.from_waypoints(
             "Cliff",
@@ -248,8 +241,9 @@ class TestSolve:
             )
 
     def test_a_steep_but_walkable_leg_is_still_planned(self, hiker: HikerProfile) -> None:
-        from backpacking.trail.corridor import Corridor
         from tests.conftest import wp
+
+        from backpacking.trail.corridor import Corridor
 
         steep = Corridor.from_waypoints(
             "Steep",

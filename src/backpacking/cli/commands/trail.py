@@ -71,9 +71,7 @@ def water_gaps(
         table_of_water = context.water(session).load(corridors.corridor_id(slug))
     estimator = PaceEstimator(profile=HikerProfile(flat_pace_mph=pace))
     rows = []
-    for stretch in find_dry_stretches(
-        corridor, table_of_water, month, min_length_miles=minimum
-    ):
+    for stretch in find_dry_stretches(corridor, table_of_water, month, min_length_miles=minimum):
         carry = plan_carry(
             corridor, estimator, stretch, Volume.liters(capacity), temperature_c=temperature
         )

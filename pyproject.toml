@@ -59,7 +59,18 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "C4", "SIM", "RUF"]
-ignore = ["B008"]
+ignore = [
+    # FastAPI dependency injection is written as a call in a default argument.
+    "B008",
+    # Every dataclass default in this project is a frozen quantity such as
+    # Mass.pounds(25.0). They are immutable and shared safely, so the mutable
+    # default the rule guards against cannot occur here.
+    "RUF009",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests read better with long, explicit assertion lines than with wrapped ones.
+"tests/*" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

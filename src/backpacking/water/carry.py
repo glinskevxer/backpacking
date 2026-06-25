@@ -12,6 +12,7 @@ in the shade, and a plan that averages them will run a hiker dry on the climb.
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 
 from backpacking.errors import WaterCarryError
@@ -57,7 +58,10 @@ class DryStretch:
         return self.start_source is None or self.end_source is None
 
     def __repr__(self) -> str:
-        return f"DryStretch({self.start_mile:.1f}-{self.end_mile:.1f} mi, {self.length.in_miles:.1f} mi)"
+        return (
+            f"DryStretch({self.start_mile:.1f}-{self.end_mile:.1f} mi, "
+            f"{self.length.in_miles:.1f} mi)"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,9 +108,7 @@ def find_dry_stretches(
     boundaries.extend((source.mile, source) for source in usable)
     boundaries.append((corridor.end_mile, None))
     found: list[DryStretch] = []
-    for (start_mile, start_source), (end_mile, end_source) in zip(
-        boundaries, boundaries[1:], strict=False
-    ):
+    for (start_mile, start_source), (end_mile, end_source) in itertools.pairwise(boundaries):
         if end_mile - start_mile >= min_length_miles:
             found.append(
                 DryStretch(
@@ -122,7 +124,9 @@ def find_dry_stretches(
 def consumption_rate(temperature_c: float, gain_per_hour_ft: float = 0.0) -> float:
     """Litres per hour of moving time under these conditions."""
     if temperature_c < -60.0 or temperature_c > 60.0:
-        raise WaterCarryError("temperature is outside any plausible range", temperature_c=temperature_c)
+        raise WaterCarryError(
+            "temperature is outside any plausible range", temperature_c=temperature_c
+        )
     heat = 1.0 + TEMPERATURE_SENSITIVITY * max(0.0, temperature_c - MILD_TEMPERATURE_C)
     climb = CLIMB_SURCHARGE_PER_1000FT * max(0.0, gain_per_hour_ft) / 1000.0
     return BASE_CONSUMPTION_LPH * heat + climb
@@ -140,9 +144,7 @@ def water_needed(
 ) -> Volume:
     """Water to leave ``start_mile`` with, to reach ``end_mile`` with a reserve."""
     if end_mile < start_mile:
-        raise WaterCarryError(
-            "stretch must advance", start_mile=start_mile, end_mile=end_mile
-        )
+        raise WaterCarryError("stretch must advance", start_mile=start_mile, end_mile=end_mile)
     if reserve_liters < 0.0:
         raise WaterCarryError("reserve must not be negative", reserve_liters=reserve_liters)
     leg = estimator.estimate_span(corridor, start_mile, end_mile)

@@ -78,9 +78,7 @@ def corridors(draw) -> Corridor:
             elevation=Distance.feet(elevation),
             kind=kind,
         )
-        for index, (mile, elevation, kind) in enumerate(
-            zip(miles, elevations, kinds, strict=True)
-        )
+        for index, (mile, elevation, kind) in enumerate(zip(miles, elevations, kinds, strict=True))
     ]
     return Corridor.from_waypoints("Generated", waypoints)
 
@@ -126,9 +124,7 @@ class TestMileIndexProperties:
         assert (left, right) == (0, len(miles))
 
     @given(mile_lists())
-    def test_the_fraction_is_always_within_the_unit_interval(
-        self, miles: list[float]
-    ) -> None:
+    def test_the_fraction_is_always_within_the_unit_interval(self, miles: list[float]) -> None:
         index = MileIndex(miles)
         for probe in (miles[0], miles[-1], (miles[0] + miles[-1]) / 2.0):
             _, fraction = index.fraction_within(probe)
@@ -146,9 +142,7 @@ class TestCorridorProperties:
         assert len(corridor.segments) == len(corridor) - 1
 
     @given(corridors())
-    def test_gain_minus_loss_matches_the_terminus_difference(
-        self, corridor: Corridor
-    ) -> None:
+    def test_gain_minus_loss_matches_the_terminus_difference(self, corridor: Corridor) -> None:
         net = corridor.total_gain().in_feet - corridor.total_loss().in_feet
         expected = (
             corridor.waypoints[-1].elevation.in_feet - corridor.waypoints[0].elevation.in_feet

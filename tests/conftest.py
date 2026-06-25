@@ -9,23 +9,21 @@ shows up everywhere at once.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterator
 from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
 
-from backpacking.gear.inventory import Inventory, ItemCategory, PackItem
 from backpacking.api.app import create_app
 from backpacking.config import Settings
+from backpacking.gear.inventory import Inventory, ItemCategory, PackItem
 from backpacking.pace.estimator import PaceEstimator
-from backpacking.resupply.towns import ResupplyPoint, ServiceLevel, TownIndex
+from backpacking.pace.models import HikerProfile
 from backpacking.permits.quota import EntryPoint, QuotaCalendar, QuotaWindow
 from backpacking.permits.zones import CampingPolicy, PermitZone, ZoneMap
-from backpacking.pace.models import HikerProfile
-from backpacking.trail.corridor import Corridor
-from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
-from backpacking.units import Distance, Duration, Mass
+from backpacking.resupply.towns import ResupplyPoint, ServiceLevel, TownIndex
 from backpacking.storage.repository import (
     CorridorRepository,
     PermitRepository,
@@ -33,6 +31,9 @@ from backpacking.storage.repository import (
     WaterRepository,
 )
 from backpacking.storage.session import Database
+from backpacking.trail.corridor import Corridor
+from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
+from backpacking.units import Distance, Duration, Mass
 from backpacking.water.sources import Reliability, WaterSource, WaterTable
 
 
@@ -105,7 +106,7 @@ def build_corridor() -> Corridor:
         "paradise-shelter": (480, 570, Surface.TREAD),
     }
     segments = []
-    for start, end in zip(waypoints, waypoints[1:], strict=False):
+    for start, end in itertools.pairwise(waypoints):
         gain_ft, loss_ft, surface = rough[start.id]
         segments.append(
             Segment(
@@ -116,7 +117,9 @@ def build_corridor() -> Corridor:
                 surface=surface,
             )
         )
-    return Corridor(name="Crystal Range Traverse", waypoints=tuple(waypoints), segments=tuple(segments))
+    return Corridor(
+        name="Crystal Range Traverse", waypoints=tuple(waypoints), segments=tuple(segments)
+    )
 
 
 @pytest.fixture
@@ -304,7 +307,9 @@ def build_quota_calendar() -> QuotaCalendar:
                 mile=0.0,
                 zone_id="echo-front",
                 windows=(
-                    QuotaWindow(date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4),
+                    QuotaWindow(
+                        date(2025, 6, 15), date(2025, 9, 15), daily_limit=12, walk_up_reserved=4
+                    ),
                 ),
                 closures=frozenset({date(2025, 7, 4)}),
             ),

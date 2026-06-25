@@ -82,9 +82,7 @@ class PackingResult:
 
     @property
     def packed_volume(self) -> Volume:
-        return Volume.milliliters(
-            sum(_volume_of(item).in_milliliters for item in self.packed)
-        )
+        return Volume.milliliters(sum(_volume_of(item).in_milliliters for item in self.packed))
 
     @property
     def packed_mass(self) -> Mass:
@@ -101,9 +99,7 @@ class PackingResult:
 
     @property
     def overflow_volume(self) -> Volume:
-        return Volume.milliliters(
-            sum(_volume_of(item).in_milliliters for item in self.left_out)
-        )
+        return Volume.milliliters(sum(_volume_of(item).in_milliliters for item in self.left_out))
 
     def __repr__(self) -> str:
         verdict = "fits" if self.everything_fits else f"{len(self.left_out)} left out"
@@ -114,9 +110,7 @@ def pack(canister: Canister, items: Sequence[FoodItem]) -> PackingResult:
     """First fit decreasing into a single canister."""
     for item in items:
         if item.volume is None:
-            raise LoadoutError(
-                "cannot pack an item with no volume", item=item.id
-            )
+            raise LoadoutError("cannot pack an item with no volume", item=item.id)
     ordered = sorted(items, key=lambda item: _volume_of(item).in_milliliters, reverse=True)
     capacity = canister.usable_volume.in_milliliters
     remaining = capacity
@@ -129,9 +123,7 @@ def pack(canister: Canister, items: Sequence[FoodItem]) -> PackingResult:
             remaining -= needed
         else:
             left_out.append(item)
-    return PackingResult(
-        canister=canister, packed=tuple(packed), left_out=tuple(left_out)
-    )
+    return PackingResult(canister=canister, packed=tuple(packed), left_out=tuple(left_out))
 
 
 def days_that_fit(
@@ -162,9 +154,7 @@ def smallest_canister_for(items: Sequence[FoodItem]) -> Canister:
             return canister
     raise LoadoutError(
         "no canister in the table holds this food bag",
-        required_cubic_inches=round(
-            sum(_volume_of(item).in_cubic_inches for item in items), 1
-        ),
+        required_cubic_inches=round(sum(_volume_of(item).in_cubic_inches for item in items), 1),
     )
 
 

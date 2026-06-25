@@ -8,7 +8,6 @@ from datetime import date
 import pytest
 from sqlalchemy.orm import Session
 
-from backpacking.config import Settings
 from backpacking.errors import DataSourceError
 from backpacking.pace.models import HikerProfile
 from backpacking.permits.zones import CampingPolicy, ZoneMap
@@ -51,9 +50,7 @@ class TestCorridorRepository:
         assert [w.id for w in loaded] == [w.id for w in corridor]
         assert loaded.length.in_miles == pytest.approx(corridor.length.in_miles)
 
-    def test_elevations_survive_the_round_trip(
-        self, session: Session, corridor: Corridor
-    ) -> None:
+    def test_elevations_survive_the_round_trip(self, session: Session, corridor: Corridor) -> None:
         repo = CorridorRepository(session)
         repo.save(corridor, "crystal-range")
         loaded = repo.load("crystal-range")
@@ -69,9 +66,7 @@ class TestCorridorRepository:
         assert loaded.total_gain().in_feet == pytest.approx(corridor.total_gain().in_feet)
         assert loaded.total_loss().in_feet == pytest.approx(corridor.total_loss().in_feet)
 
-    def test_kinds_tags_and_surfaces_survive(
-        self, session: Session, corridor: Corridor
-    ) -> None:
+    def test_kinds_tags_and_surfaces_survive(self, session: Session, corridor: Corridor) -> None:
         repo = CorridorRepository(session)
         repo.save(corridor, "crystal-range")
         loaded = repo.load("crystal-range")
@@ -100,9 +95,7 @@ class TestCorridorRepository:
         with pytest.raises(DataSourceError, match="no corridor with that slug"):
             CorridorRepository(session).load("nowhere")
 
-    def test_deleting_removes_the_waypoints_too(
-        self, session: Session, corridor: Corridor
-    ) -> None:
+    def test_deleting_removes_the_waypoints_too(self, session: Session, corridor: Corridor) -> None:
         repo = CorridorRepository(session)
         repo.save(corridor, "crystal-range")
         repo.delete("crystal-range")

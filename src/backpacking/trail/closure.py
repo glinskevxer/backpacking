@@ -69,9 +69,7 @@ class Closure:
             and self.effective_to is not None
             and self.effective_to < self.effective_from
         ):
-            raise RouteResolutionError(
-                "a closure must not end before it starts", closure=self.id
-            )
+            raise RouteResolutionError("a closure must not end before it starts", closure=self.id)
 
     @property
     def length(self) -> Distance:

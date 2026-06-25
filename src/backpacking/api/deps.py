@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from backpacking.config import Settings
 from backpacking.errors import ConfigurationError
+from backpacking.services.planning import PlanningService
 from backpacking.storage.repository import (
     CorridorRepository,
     PermitRepository,
@@ -22,7 +23,6 @@ from backpacking.storage.repository import (
     ResupplyRepository,
     WaterRepository,
 )
-from backpacking.services.planning import PlanningService
 from backpacking.storage.session import Database
 
 

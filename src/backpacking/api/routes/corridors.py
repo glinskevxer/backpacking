@@ -18,15 +18,11 @@ def list_corridors(
     repository: CorridorRepository = Depends(get_corridors),
 ) -> list[CorridorSummaryOut]:
     """Every stored corridor, summarised."""
-    return [
-        CorridorSummaryOut.of(slug, repository.load(slug)) for slug in repository.list_slugs()
-    ]
+    return [CorridorSummaryOut.of(slug, repository.load(slug)) for slug in repository.list_slugs()]
 
 
 @router.get("/{slug}", response_model=CorridorOut)
-def get_corridor(
-    slug: str, repository: CorridorRepository = Depends(get_corridors)
-) -> CorridorOut:
+def get_corridor(slug: str, repository: CorridorRepository = Depends(get_corridors)) -> CorridorOut:
     """One corridor with its waypoints and segments."""
     return CorridorOut.full(slug, repository.load(slug))
 
@@ -78,9 +74,7 @@ def corridor_profile(
 
 
 @router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_corridor(
-    slug: str, repository: CorridorRepository = Depends(get_corridors)
-) -> Response:
+def delete_corridor(slug: str, repository: CorridorRepository = Depends(get_corridors)) -> Response:
     """Remove a corridor and everything hanging off it."""
     repository.delete(slug)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

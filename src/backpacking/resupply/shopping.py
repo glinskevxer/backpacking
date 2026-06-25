@@ -29,9 +29,7 @@ class ShoppingLine:
 
     def __post_init__(self) -> None:
         if self.quantity < 1:
-            raise ResupplyInfeasible(
-                "a shopping line covers at least one item", item=self.item.id
-            )
+            raise ResupplyInfeasible("a shopping line covers at least one item", item=self.item.id)
 
     @property
     def total_mass(self) -> Mass:
@@ -116,9 +114,7 @@ def build_shopping_list(
     if not catalogue:
         raise ResupplyInfeasible("cannot shop from an empty catalogue")
     if max_of_any_item < 1:
-        raise ResupplyInfeasible(
-            "the per item cap must be at least one", cap=max_of_any_item
-        )
+        raise ResupplyInfeasible("the per item cap must be at least one", cap=max_of_any_item)
     if overshoot_fraction < 0.0:
         raise ResupplyInfeasible("overshoot must not be negative")
 
@@ -147,9 +143,7 @@ def build_shopping_list(
         raise ResupplyInfeasible(
             "no combination of catalogue items fits under the overshoot ceiling",
             target_kcal=round(target, 0),
-            smallest_item_kcal=round(
-                min(item.energy.in_kilocalories for item in ordered), 0
-            ),
+            smallest_item_kcal=round(min(item.energy.in_kilocalories for item in ordered), 0),
         )
     return ShoppingList(lines=lines, target_energy=rations.total_energy, days=rations.days)
 
@@ -174,8 +168,7 @@ def render_shopping_list(shopping: ShoppingList) -> str:
     )
     rows.append("")
     rows.append(
-        f"{shopping.days:.1f} days at "
-        f"{shopping.daily_energy.in_kilocalories:.0f} kcal a day"
+        f"{shopping.days:.1f} days at " f"{shopping.daily_energy.in_kilocalories:.0f} kcal a day"
     )
     if not shopping.meets_target:
         rows.append(

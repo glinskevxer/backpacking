@@ -58,17 +58,13 @@ class TestCampingPolicyRule:
     def test_a_legal_trip_produces_nothing(self, zone_map: ZoneMap) -> None:
         assert CampingPolicyRule().check(legal_trip(), zone_map) == []
 
-    def test_an_undesignated_camp_in_the_wilderness_is_a_violation(
-        self, zone_map: ZoneMap
-    ) -> None:
+    def test_an_undesignated_camp_in_the_wilderness_is_a_violation(self, zone_map: ZoneMap) -> None:
         findings = CampingPolicyRule().check([night(0, 20.0, None)], zone_map)
         assert len(findings) == 1
         assert findings[0].severity is Severity.VIOLATION
         assert "designated site" in findings[0].message
 
-    def test_a_camp_at_a_site_from_another_zone_is_a_violation(
-        self, zone_map: ZoneMap
-    ) -> None:
+    def test_a_camp_at_a_site_from_another_zone_is_a_violation(self, zone_map: ZoneMap) -> None:
         findings = CampingPolicyRule().check([night(0, 20.0, "whiskey-flat")], zone_map)
         assert findings[0].blocks_permit
 
@@ -117,7 +113,9 @@ class TestConsecutiveNightsRule:
 
 class TestCanisterRule:
     def test_carrying_one_satisfies_the_rule(self, zone_map: ZoneMap) -> None:
-        assert CanisterRule().check([night(0, 15.3, "clyde-basin", has_canister=True)], zone_map) == []
+        assert (
+            CanisterRule().check([night(0, 15.3, "clyde-basin", has_canister=True)], zone_map) == []
+        )
 
     def test_going_without_one_is_a_violation(self, zone_map: ZoneMap) -> None:
         findings = CanisterRule().check([night(0, 15.3, "clyde-basin")], zone_map)
@@ -233,7 +231,9 @@ class TestValidateNights:
         assert caught.value.context["nights"] == 1
 
     def test_repr(self, zone_map: ZoneMap) -> None:
-        assert repr(validate_nights(legal_trip(), zone_map)) == "PermitReport(4 nights, no findings)"
+        assert (
+            repr(validate_nights(legal_trip(), zone_map)) == "PermitReport(4 nights, no findings)"
+        )
 
 
 class TestEntryAndTrip:

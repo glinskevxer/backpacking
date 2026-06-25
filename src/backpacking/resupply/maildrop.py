@@ -64,10 +64,7 @@ class MailDrop:
 
     def is_collectable_on(self, when: date) -> bool:
         """Whether the parcel is there, still held, and the counter is open."""
-        return (
-            self.arrives_on <= when < self.returns_on
-            and self.is_counter_open(when)
-        )
+        return self.arrives_on <= when < self.returns_on and self.is_counter_open(when)
 
     def is_counter_open(self, when: date) -> bool:
         if when in self.holidays:

@@ -43,9 +43,7 @@ def main(
     ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="suppress progress output"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="log at debug level"),
-    _version: bool = typer.Option(
-        False, "--version", callback=version_callback, is_eager=True
-    ),
+    _version: bool = typer.Option(False, "--version", callback=version_callback, is_eager=True),
 ) -> None:
     """Set up the shared context before any sub command runs."""
     logging.basicConfig(

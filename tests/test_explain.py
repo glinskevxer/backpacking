@@ -49,9 +49,7 @@ class TestExplainDay:
         explanation = explain_day(plan[0], hiker, target_hours=7.2)
         assert explanation.total == pytest.approx(sum(explanation.terms.values()))
 
-    def test_the_dominant_term_is_the_biggest(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_the_dominant_term_is_the_biggest(self, plan: Itinerary, hiker: HikerProfile) -> None:
         explanation = explain_day(plan[0], hiker, target_hours=7.2)
         biggest = max(explanation.terms.values())
         assert explanation.terms[explanation.dominant_term] == pytest.approx(biggest)
@@ -73,9 +71,7 @@ class TestExplainDay:
         explanation = explain_day(plan[0], hiker, target_hours=7.2)
         assert repr(explanation).startswith("DayExplanation(day 0,")
 
-    def test_explaining_a_plan_covers_every_day(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_explaining_a_plan_covers_every_day(self, plan: Itinerary, hiker: HikerProfile) -> None:
         assert len(explain_plan(plan, hiker, target_hours=7.2)) == len(plan)
 
 
@@ -120,9 +116,7 @@ class TestRenderCosts:
         for term in ("effort", "camp", "late_finish", "steep_finish", "per_day"):
             assert term in header
 
-    def test_the_last_row_is_the_grand_total(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_the_last_row_is_the_grand_total(self, plan: Itinerary, hiker: HikerProfile) -> None:
         explanations = explain_plan(plan, hiker, target_hours=7.2)
         expected = sum(explanation.total for explanation in explanations)
         assert f"{expected:.2f}" in render_costs(explanations).splitlines()[-1]
@@ -135,7 +129,12 @@ class TestRenderCosts:
 class TestRenderPermitReport:
     def test_a_clean_report_is_one_line(self, zone_map: ZoneMap) -> None:
         nights = [
-            CampNight(night=START, mile=5.1, site_id="haypress-camp", distance_from_water=Distance.feet(300))
+            CampNight(
+                night=START,
+                mile=5.1,
+                site_id="haypress-camp",
+                distance_from_water=Distance.feet(300),
+            )
         ]
         text = render_permit_report(validate_nights(nights, zone_map))
         assert text == "1 nights, no findings"
@@ -166,9 +165,7 @@ class TestRenderPermitReport:
 
 
 class TestRenderSummary:
-    def test_it_names_the_dates_and_the_hiker(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_it_names_the_dates_and_the_hiker(self, plan: Itinerary, hiker: HikerProfile) -> None:
         text = render_summary(plan, hiker)
         assert plan.start_date.isoformat() in text
         assert plan.finish_date.isoformat() in text
@@ -201,8 +198,6 @@ class TestRenderFullReport:
         )
         assert report.summary() in text
 
-    def test_it_is_left_out_when_not_given(
-        self, plan: Itinerary, hiker: HikerProfile
-    ) -> None:
+    def test_it_is_left_out_when_not_given(self, plan: Itinerary, hiker: HikerProfile) -> None:
         text = render_full_report(plan, hiker, target_hours=target_hours_for(hiker))
         assert "blocking:" not in text

@@ -104,9 +104,7 @@ def explain(
     """The objective, term by term, for each day of a freshly built plan."""
     request = request_from(body, service)
     itinerary = service.build_plan(request)
-    return service.explain(
-        itinerary, request.profile, aggressiveness=body.aggressiveness
-    )
+    return service.explain(itinerary, request.profile, aggressiveness=body.aggressiveness)
 
 
 @router.get("", response_model=list[dict[str, object]])

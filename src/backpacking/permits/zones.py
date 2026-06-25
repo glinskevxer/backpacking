@@ -16,6 +16,7 @@ that starts there, matching the convention in
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -71,9 +72,7 @@ class PermitZone:
                 nights=self.max_consecutive_nights,
             )
         if self.camping.requires_named_site and not self.designated_sites:
-            raise PermitError(
-                "a zone that requires a named site must list its sites", zone=self.id
-            )
+            raise PermitError("a zone that requires a named site must list its sites", zone=self.id)
 
     @property
     def length(self) -> Distance:
@@ -122,11 +121,9 @@ class ZoneMap:
             if zone.id in seen:
                 raise PermitError("duplicate permit zone id", zone=zone.id)
             seen.add(zone.id)
-        for left, right in zip(ordered, ordered[1:], strict=False):
+        for left, right in itertools.pairwise(ordered):
             if left.overlaps(right):
-                raise PermitError(
-                    "permit zones overlap", first=left.id, second=right.id
-                )
+                raise PermitError("permit zones overlap", first=left.id, second=right.id)
             if not allow_gaps and right.start_mile > left.end_mile:
                 raise PermitError(
                     "gap between permit zones",

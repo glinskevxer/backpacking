@@ -12,7 +12,7 @@ and the folding rules are the only fiddly part.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from backpacking.errors import DataSourceError
 from backpacking.plan.itinerary import DayPlan, Itinerary
@@ -23,12 +23,7 @@ LINE_LIMIT = 75
 
 def escape(value: str) -> str:
     """Escape the four characters iCalendar treats specially."""
-    return (
-        value.replace("\\", "\\\\")
-        .replace(";", "\\;")
-        .replace(",", "\\,")
-        .replace("\n", "\\n")
-    )
+    return value.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
 def fold(line: str) -> list[str]:
@@ -48,7 +43,7 @@ def format_date(value: date) -> str:
 
 
 def format_timestamp(value: datetime) -> str:
-    return value.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return value.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
 def day_summary(day: DayPlan, corridor_name: str) -> str:
@@ -84,7 +79,7 @@ def to_ics(itinerary: Itinerary, *, generated_at: datetime | None = None) -> str
     """Render an itinerary as an all day event per day."""
     if len(itinerary) == 0:
         raise DataSourceError("cannot export an empty itinerary")
-    stamp = format_timestamp(generated_at or datetime.now(timezone.utc))
+    stamp = format_timestamp(generated_at or datetime.now(UTC))
     lines: list[str] = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",

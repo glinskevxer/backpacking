@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import itertools
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -24,7 +26,7 @@ class TestBuildPlan:
         days = api.post("/plans", json=BODY).json()["days"]
         assert days[0]["start_mile"] == pytest.approx(0.0)
         assert days[-1]["end_mile"] == pytest.approx(78.0)
-        for first, second in zip(days, days[1:], strict=False):
+        for first, second in itertools.pairwise(days):
             assert first["end_mile"] == pytest.approx(second["start_mile"])
 
     def test_every_day_reports_its_hours(self, api: TestClient) -> None:

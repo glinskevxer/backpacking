@@ -225,9 +225,7 @@ class PlanRow(Base):
 
 class PlanDayRow(Base):
     __tablename__ = "plan_days"
-    __table_args__ = (
-        UniqueConstraint("plan_id", "day_index", name="uq_day_index_per_plan"),
-    )
+    __table_args__ = (UniqueConstraint("plan_id", "day_index", name="uq_day_index_per_plan"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id", ondelete="CASCADE"))

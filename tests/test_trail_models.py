@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from tests.conftest import wp
 
 from backpacking.errors import CorridorError
 from backpacking.geo import GeoPoint
 from backpacking.trail.models import Segment, Surface, Waypoint, WaypointKind
 from backpacking.units import Distance
-from tests.conftest import wp
 
 
 class TestWaypointKind:
