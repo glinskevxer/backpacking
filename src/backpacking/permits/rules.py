@@ -72,9 +72,17 @@ class Finding:
 
 
 class Rule(Protocol):
-    """Anything that can grade a whole itinerary."""
+    """Anything that can grade a whole itinerary.
 
-    name: str
+    ``name`` is declared as a property rather than an attribute so that the
+    frozen dataclasses below satisfy it. A plain annotation would require a
+    settable attribute, which a frozen dataclass field is not.
+    """
+
+    @property
+    def name(self) -> str:
+        """Stable identifier, used to group findings by the rule that raised them."""
+        ...
 
     def check(self, nights: Sequence[CampNight], zones: ZoneMap) -> list[Finding]:
         """Return every finding this rule has against the itinerary."""
@@ -257,10 +265,11 @@ class WaterSetbackRule:
 
 def default_rules() -> tuple[Rule, ...]:
     """The rule set every itinerary is graded against unless told otherwise."""
-    return (
+    rules: list[Rule] = [
         CampingPolicyRule(),
         ConsecutiveNightsRule(),
         CanisterRule(),
         CampfireRule(),
         WaterSetbackRule(),
-    )
+    ]
+    return tuple(rules)

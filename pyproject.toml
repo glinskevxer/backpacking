@@ -44,6 +44,9 @@ backpacking = "backpacking.cli.main:run"
 [tool.hatch.build.targets.wheel]
 packages = ["src/backpacking"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/backpacking/py.typed" = "backpacking/py.typed"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "."]

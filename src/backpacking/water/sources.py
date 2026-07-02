@@ -13,7 +13,7 @@ report from three days ago lowers it.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
@@ -138,7 +138,7 @@ class WaterTable:
     def __len__(self) -> int:
         return len(self._sources)
 
-    def __iter__(self) -> Iterable[WaterSource]:
+    def __iter__(self) -> Iterator[WaterSource]:
         return iter(self._sources)
 
     def get(self, source_id: str) -> WaterSource:
