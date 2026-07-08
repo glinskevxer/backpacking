@@ -1,0 +1,169 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  FORCE_COLOR: "0"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint and format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: python -m pip install -e ".[api,db,cli,dev]"
+
+      - name: Ruff check
+        run: ruff check src tests
+
+      - name: Ruff format check
+        run: ruff format --check src tests
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: python -m pip install -e ".[api,db,cli,dev]"
+
+      - name: Mypy
+        run: mypy
+
+  test:
+    name: test on ${{ matrix.python-version }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: python -m pip install -e ".[api,db,cli,dev]"
+
+      - name: Run the suite
+        run: |
+          python -m pytest \
+            --cov=backpacking \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --junitxml=junit.xml
+
+      - name: Upload coverage
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.xml
+          retention-days: 7
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-${{ matrix.python-version }}
+          path: junit.xml
+          retention-days: 7
+
+  migrations:
+    name: migrations apply cleanly
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: backpacking
+          POSTGRES_PASSWORD: backpacking
+          POSTGRES_DB: backpacking
+        options: >-
+          --health-cmd "pg_isready -U backpacking"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+    env:
+      BACKPACKING_DATABASE_URL: postgresql+psycopg://backpacking:backpacking@localhost:5432/backpacking
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: |
+          python -m pip install -e ".[api,db,cli]"
+          python -m pip install "psycopg[binary]==3.2.3"
+
+      - name: Upgrade to head
+        run: alembic upgrade head
+
+      - name: Downgrade to base and back
+        run: |
+          alembic downgrade base
+          alembic upgrade head
+
+      - name: Seed and smoke the service
+        run: |
+          python scripts/seed_demo.py
+          python - <<'PY'
+          from fastapi.testclient import TestClient
+          from backpacking.api.app import create_app
+
+          with TestClient(create_app()) as client:
+              assert client.get("/health").status_code == 200
+              assert client.get("/ready").json()["database"] == "reachable"
+              corridors = client.get("/corridors").json()
+              assert any(c["slug"] == "sample-traverse" for c in corridors)
+              plan = client.post(
+                  "/plans",
+                  json={"corridor": "sample-traverse", "start_date": "2025-08-01"},
+              )
+              assert plan.status_code == 200, plan.text
+              assert plan.json()["total_miles"] > 0
+          print("smoke test passed")
+          PY

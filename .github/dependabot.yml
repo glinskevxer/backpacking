@@ -1,0 +1,46 @@
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+      day: monday
+      time: "07:00"
+    open-pull-requests-limit: 5
+    groups:
+      dev-tooling:
+        patterns:
+          - ruff
+          - mypy
+          - pytest*
+          - hypothesis
+          - freezegun
+      runtime:
+        patterns:
+          - fastapi
+          - pydantic*
+          - sqlalchemy
+          - alembic
+          - uvicorn
+          - typer
+          - click
+          - structlog
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: docker
