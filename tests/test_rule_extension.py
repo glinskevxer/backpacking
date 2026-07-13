@@ -139,9 +139,7 @@ class TestCustomRuleInAction:
         assert report.is_permittable
 
     def test_replacing_the_set_entirely_works(self, zone_map: ZoneMap) -> None:
-        report = validate_nights(
-            [night(0, 15.3, 8600, "clyde-basin")], zone_map, [CanisterRule()]
-        )
+        report = validate_nights([night(0, 15.3, 8600, "clyde-basin")], zone_map, [CanisterRule()])
         assert len(report.findings) == 0
 
     def test_an_empty_rule_set_finds_nothing(self, zone_map: ZoneMap) -> None:

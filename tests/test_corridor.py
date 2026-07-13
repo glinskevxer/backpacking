@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from itertools import pairwise
+
 import pytest
 from tests.conftest import wp
 
@@ -202,6 +204,68 @@ class TestAggregates:
     def test_whole_corridor_gain_matches_the_total(self, corridor: Corridor) -> None:
         spanning = corridor.gain_between(corridor.start_mile, corridor.end_mile)
         assert spanning.in_feet == pytest.approx(corridor.total_gain().in_feet)
+
+
+class TestSegmentsBetweenBoundaries:
+    """The index driven lookup has to agree with the filter it replaced."""
+
+    @staticmethod
+    def by_scan(corridor: Corridor, start_mile: float, end_mile: float) -> list[str]:
+        return [
+            segment.start.id
+            for segment in corridor.segments
+            if segment.end.mile > start_mile and segment.start.mile < end_mile
+        ]
+
+    @pytest.mark.parametrize(
+        ("start_mile", "end_mile"),
+        [
+            (0.0, 78.0),
+            (0.0, 2.4),
+            (2.4, 5.1),
+            (2.4, 2.4),
+            (9.0, 12.5),
+            (11.9, 11.9),
+            (11.9, 15.3),
+            (12.0, 12.0),
+            (23.6, 44.7),
+            (70.8, 78.0),
+            (77.9, 78.0),
+        ],
+    )
+    def test_it_matches_a_full_scan(
+        self, corridor: Corridor, start_mile: float, end_mile: float
+    ) -> None:
+        found = [s.start.id for s in corridor.segments_between(start_mile, end_mile)]
+        assert found == self.by_scan(corridor, start_mile, end_mile)
+
+    def test_a_span_starting_before_the_corridor_clamps(self, corridor: Corridor) -> None:
+        found = corridor.segments_between(-10.0, 5.1)
+        assert [s.start.id for s in found] == ["echo-trailhead", "tamarack-creek"]
+
+    def test_a_span_running_past_the_end_clamps(self, corridor: Corridor) -> None:
+        found = corridor.segments_between(70.8, 200.0)
+        assert [s.start.id for s in found] == ["paradise-shelter"]
+
+    def test_a_span_entirely_past_the_end_is_empty(self, corridor: Corridor) -> None:
+        assert corridor.segments_between(100.0, 200.0) == ()
+
+    def test_the_result_is_contiguous(self, corridor: Corridor) -> None:
+        found = corridor.segments_between(9.0, 45.0)
+        for first, second in pairwise(found):
+            assert first.end.id == second.start.id
+
+    def test_it_covers_the_whole_stretch(self, corridor: Corridor) -> None:
+        found = corridor.segments_between(9.0, 45.0)
+        assert found[0].start.mile <= 9.0
+        assert found[-1].end.mile >= 45.0
+
+    def test_prorated_gain_still_agrees_with_the_segments(self, corridor: Corridor) -> None:
+        total = 0.0
+        for segment in corridor.segments_between(8.7, 18.0):
+            overlap = min(18.0, segment.end.mile) - max(8.7, segment.start.mile)
+            total += segment.gain.in_feet * (overlap / segment.length.in_miles)
+        assert corridor.gain_between(8.7, 18.0).in_feet == pytest.approx(total)
 
 
 class TestSlicing:

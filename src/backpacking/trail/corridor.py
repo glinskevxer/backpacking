@@ -8,6 +8,7 @@ to the solver, the permit checker and the resupply planner at once.
 from __future__ import annotations
 
 import itertools
+from bisect import bisect_left
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 
@@ -196,9 +197,18 @@ class Corridor:
     # -- derived aggregates ---------------------------------------------
 
     def segments_between(self, start_mile: float, end_mile: float) -> tuple[Segment, ...]:
-        return tuple(
-            s for s in self.segments if s.end.mile > start_mile and s.start.mile < end_mile
-        )
+        """Segments overlapping a stretch, found through the index rather than scanned.
+
+        This used to filter every segment on the corridor. That is fine for a
+        seventy mile trail and quadratic for the solver, which asks for a span
+        once per candidate edge: on a four hundred point corridor almost all of
+        the search time was spent in this one comprehension.
+        """
+        if end_mile <= self.start_mile or start_mile >= self.end_mile:
+            return ()
+        left = self.index.interval_for(start_mile)
+        right = bisect_left(self.index.miles, end_mile)
+        return self.segments[left:right]
 
     def gain_between(self, start_mile: float, end_mile: float) -> Distance:
         """Climb over a stretch, prorating the segments the ends fall inside."""

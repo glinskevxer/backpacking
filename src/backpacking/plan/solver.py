@@ -178,6 +178,14 @@ def _relax(
         return None
     start_mile = nodes[source_index]
     end_mile = nodes[target_index]
+    # Reject on the two limits that need no estimate before paying for one.
+    # Most candidate edges on a long corridor fail here, and computing a pace
+    # estimate for each of them was the whole cost of the search.
+    span_miles = end_mile - start_mile
+    if span_miles > constraints.max_daily_miles:
+        return None
+    if span_miles < constraints.min_daily_miles and not is_final:
+        return None
     try:
         estimate = estimator.estimate_span(
             request.corridor,
