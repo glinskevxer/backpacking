@@ -53,6 +53,13 @@ pythonpath = ["src", "."]
 addopts = "-q --strict-markers"
 markers = [
     "slow: takes more than a second to run",
+    "benchmark: measures how long something takes rather than what it returns",
+]
+filterwarnings = [
+    "error",
+    # SQLAlchemy emits this on SQLite when a savepoint is rolled back inside a
+    # nested transaction, which the session scope does deliberately.
+    "default::ResourceWarning",
 ]
 
 [tool.ruff]
@@ -74,6 +81,25 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Tests read better with long, explicit assertion lines than with wrapped ones.
 "tests/*" = ["E501"]
+
+[tool.coverage.run]
+source = ["backpacking"]
+branch = true
+omit = [
+    # The uvicorn entry point is one line and cannot be exercised in process.
+    "src/backpacking/api/main.py",
+]
+
+[tool.coverage.report]
+precision = 1
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
 
 [tool.mypy]
 python_version = "3.12"
