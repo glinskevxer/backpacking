@@ -1,0 +1,89 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, so a newly published advisory against a pinned dependency shows up
+    # without waiting for someone to open a pull request.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: |
+          python -m pip install -e ".[api,db,cli]"
+          python -m pip install "pip-audit==2.7.3"
+
+      - name: Audit the installed set
+        run: pip-audit --strict --progress-spinner off
+
+  secrets:
+    name: no credentials in the tree
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan the working tree
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          # Deliberately narrow. A broad scanner produces noise nobody reads,
+          # and the point is to catch the two mistakes that actually happen:
+          # a pasted key and a hardcoded connection string with a password.
+          PATTERNS = {
+              "aws access key": re.compile(r"AKIA[0-9A-Z]{16}"),
+              "private key block": re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+              "github token": re.compile(r"gh[pousr]_[A-Za-z0-9]{36,}"),
+              "url with password": re.compile(
+                  r"(?:postgres|postgresql|mysql|redis|amqp)(?:\+\w+)?://[^\s:/]+:[^\s@/]+@"
+              ),
+          }
+          ALLOWED = {"backpacking:backpacking@"}
+          SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__"}
+
+          root = pathlib.Path(".")
+          problems = []
+          for path in root.rglob("*"):
+              if not path.is_file() or any(part in SKIP_DIRS for part in path.parts):
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              for label, pattern in PATTERNS.items():
+                  for match in pattern.finditer(text):
+                      if any(allowed in match.group(0) for allowed in ALLOWED):
+                          continue
+                      line = text[: match.start()].count("\n") + 1
+                      problems.append(f"{path}:{line}: possible {label}")
+
+          if problems:
+              print("\n".join(problems), file=sys.stderr)
+              sys.exit(1)
+          print("no credentials found")
+          PY

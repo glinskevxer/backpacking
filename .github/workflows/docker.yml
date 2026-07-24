@@ -1,0 +1,73 @@
+name: docker
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build and smoke the image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          load: true
+          tags: backpacking:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: The image runs as a non root user
+        run: |
+          uid=$(docker run --rm backpacking:ci id -u)
+          if [ "$uid" = "0" ]; then
+            echo "image runs as root" >&2
+            exit 1
+          fi
+          echo "runs as uid $uid"
+
+      - name: The CLI is on the path
+        run: docker run --rm backpacking:ci backpacking --version
+
+      - name: The service answers
+        run: |
+          docker run -d --name backpacking-ci -p 8000:8000 \
+            -e BACKPACKING_DATABASE_URL=sqlite+pysqlite:////tmp/ci.sqlite3 \
+            backpacking:ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1; then
+              echo "healthy after $attempt attempts"
+              break
+            fi
+            if [ "$attempt" = "30" ]; then
+              echo "service never became healthy" >&2
+              docker logs backpacking-ci
+              exit 1
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8000/health | grep -q '"status":"ok"'
+          docker rm -f backpacking-ci
+
+      - name: Report the image size
+        run: docker image inspect backpacking:ci --format '{{ .Size }}' | numfmt --to=iec
