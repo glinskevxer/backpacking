@@ -9,7 +9,7 @@ TESTS := tests
 
 .DEFAULT_GOAL := help
 .PHONY: help venv install lint format typecheck test test-fast coverage check \
-        seed serve migrate revision clean docker-build docker-up docker-down
+        seed serve serve-prod hooks migrate revision clean docker-build docker-up docker-down
 
 help: ## Show the targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -22,12 +22,13 @@ venv: ## Create the virtualenv
 install: venv ## Install the project with every extra
 	$(PIP) install -e ".[api,db,cli,dev]"
 
-lint: ## Run ruff
-	$(VENV)/bin/ruff check $(SRC) $(TESTS)
+lint: ## Run ruff and the test hygiene check
+	$(VENV)/bin/ruff check $(SRC) $(TESTS) scripts gunicorn.conf.py
+	$(PY) scripts/check_tests.py
 
 format: ## Fix what ruff can fix
-	$(VENV)/bin/ruff check --fix $(SRC) $(TESTS)
-	$(VENV)/bin/ruff format $(SRC) $(TESTS)
+	$(VENV)/bin/ruff check --fix $(SRC) $(TESTS) scripts gunicorn.conf.py
+	$(VENV)/bin/ruff format $(SRC) $(TESTS) scripts gunicorn.conf.py
 
 typecheck: ## Run mypy in strict mode
 	$(VENV)/bin/mypy
@@ -48,6 +49,13 @@ seed: ## Load the sample corridor into a local database
 
 serve: ## Run the API with reload
 	$(VENV)/bin/uvicorn backpacking.api.main:app --reload --port 8000
+
+serve-prod: ## Run the API the way the container does
+	$(VENV)/bin/gunicorn -c gunicorn.conf.py backpacking.api.main:app
+
+hooks: ## Install the pre-commit hooks
+	$(PIP) install pre-commit
+	$(VENV)/bin/pre-commit install
 
 migrate: ## Apply migrations
 	$(VENV)/bin/alembic upgrade head
