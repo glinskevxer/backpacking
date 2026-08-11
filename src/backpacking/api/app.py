@@ -24,6 +24,12 @@ from backpacking.api.routes import (
     resupply,
     water,
 )
+from backpacking.api.security import (
+    install_api_key,
+    install_body_limit,
+    install_cors,
+    install_security_headers,
+)
 from backpacking.config import Settings, get_settings
 from backpacking.observability.logging import configure_logging
 from backpacking.storage.session import Database
@@ -69,7 +75,13 @@ def create_app(
     )
     app.state.settings = resolved
     install_error_handlers(app)
+    # Middleware runs outermost last, so the order here is the reverse of the
+    # order a request meets them: key check, then body limit, then the rest.
     install_request_middleware(app)
+    install_security_headers(app)
+    install_body_limit(app, resolved)
+    app.state.api_key_enabled = install_api_key(app, resolved)
+    app.state.cors_enabled = install_cors(app, resolved)
     install_metrics_endpoint(app)
     app.include_router(health.router)
     app.include_router(corridors.router)

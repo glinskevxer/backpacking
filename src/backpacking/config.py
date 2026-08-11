@@ -47,6 +47,27 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
     log_json: bool = Field(default=False)
 
+    # Service hardening. All three are off unless configured, because the
+    # common deployment is one person running this on their own machine.
+    api_key: str = Field(default="")
+    cors_origins: list[str] = Field(default_factory=list)
+    max_request_bytes: int = Field(default=1_048_576, gt=0, le=64 * 1024 * 1024)
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        """Accept a comma separated string, which is how an env var arrives."""
+        if isinstance(value, str):
+            return [part.strip() for part in value.split(",") if part.strip()]
+        return value
+
+    @field_validator("api_key")
+    @classmethod
+    def _reject_a_token_that_is_not_one(cls, value: str) -> str:
+        if value and len(value) < 16:
+            raise ValueError("api_key must be at least 16 characters or empty")
+        return value
+
     @field_validator("log_level")
     @classmethod
     def _upper_log_level(cls, value: str) -> str:
