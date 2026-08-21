@@ -79,7 +79,7 @@ class TestRootCommands:
     def test_version(self, runner: CliRunner) -> None:
         result = runner.invoke(app, ["--version"])
         assert result.exit_code == 0
-        assert "backpacking 0.1.0" in result.output
+        assert "backpacking 1.0.0" in result.output
 
     def test_help_lists_every_group(self, runner: CliRunner) -> None:
         result = runner.invoke(app, ["--help"])

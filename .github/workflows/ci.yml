@@ -45,6 +45,9 @@ jobs:
       - name: No focused or skipped tests
         run: python scripts/check_tests.py
 
+      - name: Release readiness
+        run: python scripts/check_release.py
+
   typecheck:
     name: typecheck
     runs-on: ubuntu-24.04

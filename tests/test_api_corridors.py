@@ -24,7 +24,7 @@ class TestHealth:
         assert body["database"] == "reachable"
 
     def test_the_version_is_reported(self, client: TestClient) -> None:
-        assert client.get("/health").json()["version"] == "0.1.0"
+        assert client.get("/health").json()["version"] == "1.0.0"
 
     def test_every_response_carries_a_timing_header(self, client: TestClient) -> None:
         response = client.get("/health")

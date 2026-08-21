@@ -9,7 +9,8 @@ TESTS := tests
 
 .DEFAULT_GOAL := help
 .PHONY: help venv install lint format typecheck test test-fast coverage check \
-        seed serve serve-prod hooks migrate revision clean docker-build docker-up docker-down
+        release-check seed serve serve-prod hooks migrate revision clean \
+        docker-build docker-up docker-down
 
 help: ## Show the targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -43,6 +44,9 @@ coverage: ## Run the suite with a coverage report
 	$(PY) -m pytest --cov=backpacking --cov-report=term-missing --cov-report=xml
 
 check: lint typecheck test ## Everything CI runs
+
+release-check: ## Verify the tree is ready to tag
+	$(PY) scripts/check_release.py
 
 seed: ## Load the sample corridor into a local database
 	$(PY) scripts/seed_demo.py
