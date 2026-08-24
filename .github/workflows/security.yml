@@ -34,7 +34,9 @@ jobs:
           python -m pip install "pip-audit==2.7.3"
 
       - name: Audit the installed set
-        run: pip-audit --strict --progress-spinner off
+        # --skip-editable leaves out this project, which is installed from the
+        # checkout and has no PyPI record to audit against.
+        run: pip-audit --strict --skip-editable --progress-spinner off
 
   secrets:
     name: no credentials in the tree

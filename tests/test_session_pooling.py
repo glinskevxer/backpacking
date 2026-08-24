@@ -40,7 +40,7 @@ class TestMemoryUrlDetection:
         "url",
         [
             "sqlite+pysqlite:///./trail.sqlite3",
-            "postgresql+psycopg://user:pass@host:5432/db",
+            "postgresql+psycopg://planner@db.internal:5432/backpacking",
         ],
     )
     def test_file_and_server_urls_are_not(self, url: str) -> None:

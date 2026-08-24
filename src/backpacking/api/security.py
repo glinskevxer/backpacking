@@ -18,10 +18,9 @@ from __future__ import annotations
 import hmac
 from collections.abc import Awaitable, Callable
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from starlette.responses import Response
 
 from backpacking.config import Settings
 

@@ -12,12 +12,14 @@ Run it before tagging. Exits non zero and says which check failed.
 from __future__ import annotations
 
 import argparse
+import ast
 import importlib
 import pathlib
 import re
 import sys
 import tomllib
 from collections.abc import Callable
+from importlib.metadata import packages_distributions
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -114,6 +116,59 @@ def check_every_model_has_a_migration() -> list[str]:
     ]
 
 
+def declared_distributions() -> set[str]:
+    """Every distribution named in pyproject, normalised for comparison."""
+    project = read_pyproject()["project"]
+    declared: list[str] = list(project["dependencies"])  # type: ignore[index]
+    for extra in project.get("optional-dependencies", {}).values():  # type: ignore[union-attr]
+        declared.extend(extra)
+    return {
+        requirement.split("==")[0].split("[")[0].strip().lower().replace("_", "-")
+        for requirement in declared
+    }
+
+
+def imported_third_party_modules() -> set[str]:
+    """Top level modules that ``src`` imports and does not ship itself."""
+    found: set[str] = set()
+    for path in (ROOT / "src").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                found.update(alias.name.split(".")[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                found.add(node.module.split(".")[0])
+    return {
+        module
+        for module in found
+        if module not in sys.stdlib_module_names and module != "backpacking"
+    }
+
+
+def check_every_import_is_declared() -> list[str]:
+    """Nothing may be imported that pyproject does not ask to be installed.
+
+    This is the check that would have caught structlog. It was imported by the
+    logging module, installed by hand in the development environment, and named
+    nowhere in the packaging, so every fresh install was broken and nothing
+    local noticed. A transitive dependency counts as undeclared too: importing
+    starlette because fastapi happens to pull it in works right up until fastapi
+    stops pulling it in.
+    """
+    declared = declared_distributions()
+    dist_map = packages_distributions()
+    problems: list[str] = []
+    for module in sorted(imported_third_party_modules()):
+        dists = dist_map.get(module, [])
+        if not dists:
+            problems.append(f"{module} is imported but is not installed, so it cannot be checked")
+        elif not any(d.lower().replace("_", "-") in declared for d in dists):
+            problems.append(
+                f"{module} is imported but not declared " f"(provided by {', '.join(dists)})"
+            )
+    return problems
+
+
 def check_pinned_dependencies() -> list[str]:
     """Runtime dependencies are pinned, so two deploys are the same deploy."""
     project = read_pyproject()["project"]
@@ -134,6 +189,7 @@ CHECKS: tuple[tuple[str, Callable[[], list[str]]], ...] = (
     ("entry points import", check_entry_points_import),
     ("referenced files exist", check_referenced_files_exist),
     ("every table has a migration", check_every_model_has_a_migration),
+    ("every import is declared", check_every_import_is_declared),
     ("dependencies are pinned", check_pinned_dependencies),
 )
 

@@ -12,6 +12,9 @@ authors = [{ name = "glinskevxer", email = "roym78109@gmail.com" }]
 dependencies = [
     "pydantic==2.10.4",
     "pydantic-settings==2.7.0",
+    # backpacking.observability.logging imports this, so it belongs in the base
+    # set rather than an extra: a plain install has to be importable.
+    "structlog==24.4.0",
 ]
 
 [project.optional-dependencies]
