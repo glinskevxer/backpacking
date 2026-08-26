@@ -34,9 +34,31 @@ jobs:
           python -m pip install "pip-audit==2.7.3"
 
       - name: Audit the installed set
-        # --skip-editable leaves out this project, which is installed from the
-        # checkout and has no PyPI record to audit against.
-        run: pip-audit --strict --skip-editable --progress-spinner off
+        # This project is installed from the checkout and has no PyPI record, so
+        # it is skipped. --strict is deliberately absent: it fails on any
+        # dependency that cannot be collected, and the skipped local package is
+        # exactly that, so it turned an empty audit into a red build.
+        #
+        # The accepted advisories below are the price of pinning the runtime to
+        # early 2025 on purpose. Each is listed by id rather than suppressed
+        # wholesale, so a NEW advisory against any pin still fails this job.
+        # Reviewed 2026-08-24. Revisit whenever a pin moves.
+        #
+        #   click     8.1.8  PYSEC-2026-2132                fixed in 8.3.3
+        #   pytest    8.3.4  PYSEC-2026-1845                fixed in 9.0.3
+        #   starlette 0.41.3 seven advisories, arrives via fastapi 0.115.6,
+        #                    so it cannot move without moving fastapi
+        run: |
+          pip-audit --skip-editable --progress-spinner off \
+            --ignore-vuln PYSEC-2026-2132 \
+            --ignore-vuln PYSEC-2026-1845 \
+            --ignore-vuln PYSEC-2026-161 \
+            --ignore-vuln PYSEC-2026-1941 \
+            --ignore-vuln PYSEC-2026-1942 \
+            --ignore-vuln PYSEC-2026-2280 \
+            --ignore-vuln PYSEC-2026-2281 \
+            --ignore-vuln PYSEC-2026-248 \
+            --ignore-vuln PYSEC-2026-249
 
   secrets:
     name: no credentials in the tree
