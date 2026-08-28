@@ -1,7 +1,7 @@
 # Multi stage. The build stage keeps the toolchain, the runtime stage does not,
 # which is the difference between a 900 MB image and a 190 MB one.
 
-FROM python:3.12-slim-bookworm AS build
+FROM python:3.14-slim-bookworm AS build
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -21,7 +21,7 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install ".[api,db,cli]"
 
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
